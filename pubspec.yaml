@@ -9,11 +9,147 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  animated_digit: ^3.3.2
+  animated_text_kit: ^4.2.2
+  awesome_snackbar_content: ^0.1.8
+  cupertino_icons: ^1.0.8
+  countup: ^0.1.4
+  cloud_firestore: ^5.6.9
+  carousel_slider: ^5.0.0
+  cached_network_image: ^3.3.1
+  country_code_picker: ^3.3.0
+  device_info_plus: ^12.3.0
+  dropdown_button2: ^2.3.9
+  dotted_border: ^3.1.0
+  external_path: ^2.2.0
+  flutter_riverpod: ^2.3.6
+  flutter_secure_storage: ^8.1.0
+  flutter_svg: ^2.0.7
+  flutter_pdfview: ^1.4.3
+  flutter_slidable: ^3.1.0
+  flutter_zoom_drawer: ^3.1.1
+  flutter_staggered_grid_view: ^0.7.0
+  fl_chart: ^0.70.0
+  firebase_core: ^3.14.0
+  firebase_auth: ^5.6.0
+  google_sign_in: ^6.3.0
+  google_fonts: ^6.2.1
+  http: ^1.6.0
+  hugeicons_pro: ^0.0.1
+  intl: ^0.20.2
+  image_picker: ^1.1.2
+  lottie: ^2.3.1
+  open_file: ^3.5.10
+  pdf: ^3.11.0
+  printing: ^5.13.0
+  path_provider: ^2.1.4
+  pdfx: ^2.6.0
+  permission_handler: ^11.3.1
+  shimmer: ^3.0.0
+  share_plus: ^10.0.2
+  shared_preferences: ^2.2.0
+  smooth_page_indicator: ^1.1.0
+  url_launcher: ^6.3.0
+  universal_html: ^2.2.4
+  widgets_to_image: ^2.0.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/logo_launcher.png"
+  web:
+    generate: true
+    image_path: "assets/images/logo_launcher.png"
+  windows:
+    generate: true
+    image_path: "assets/images/logo_launcher.png"
+  macos:
+    generate: true
+    image_path: "assets/images/logo_launcher.png"
+  linux:
+    generate: true
+    image_path: "assets/images/logo_launcher.png"
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/logo.png
+    - assets/images/logo_dark.png
+    - assets/images/logo_launcher.png
+    - assets/images/logo_launcher_dark.png
+    - assets/images/not_found_frame.svg
+    - assets/images/not_found_frame_dark.svg
+    - assets/images/avatars/
+    - assets/images/dashboard/
+    - assets/images/payment_type/
+    - assets/images/reciepts/
+    - assets/images/sliders/
+  fonts:
+    - family: PoppinsLight
+      fonts:
+        - asset: assets/fonts/poppins_light.ttf
+    - family: PoppinsRegular
+      fonts:
+        - asset: assets/fonts/poppins_regular.ttf
+    - family: PoppinsMedium
+      fonts:
+        - asset: assets/fonts/poppins_medium.ttf
+    - family: PoppinsSemiBold
+      fonts:
+        - asset: assets/fonts/poppins_semibold.ttf
+    - family: PoppinsBold
+      fonts:
+        - asset: assets/fonts/poppins_bold.ttf
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/Poppins-ThinItalic.ttf
+          weight: 100
+          style: italic
+        - asset: assets/fonts/Poppins-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/Poppins-ExtraLightItalic.ttf
+          weight: 200
+          style: italic
+        - asset: assets/fonts/Poppins-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Poppins-LightItalic.ttf
+          weight: 300
+          style: italic
+        - asset: assets/fonts/Poppins-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Poppins-Italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-MediumItalic.ttf
+          weight: 500
+          style: italic
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins-SemiBoldItalic.ttf
+          weight: 600
+          style: italic
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Poppins-BoldItalic.ttf
+          weight: 700
+          style: italic
+        - asset: assets/fonts/Poppins-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/Poppins-ExtraBoldItalic.ttf
+          weight: 800
+          style: italic
+        - asset: assets/fonts/Poppins-Black.ttf
+          weight: 900
+        - asset: assets/fonts/Poppins-BlackItalic.ttf
+          weight: 900
+          style: italic
