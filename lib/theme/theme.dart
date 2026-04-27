@@ -268,6 +268,24 @@ class AppTheme {
         : 'assets/images/logo_launcher.png';
   }
 
+  static String buffaloMilkIcon(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? 'assets/images/milk_type/buffalo-milk-dark.png'
+        : 'assets/images/milk_type/buffalo-milk.png';
+  }
+
+  static String cowMilkIcon(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? 'assets/images/milk_type/cow-milk-dark.png'
+        : 'assets/images/milk_type/cow-milk.png';
+  }
+  
+  static String goatMilkIcon(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? 'assets/images/milk_type/goat-milk-dark.png'
+        : 'assets/images/milk_type/goat-milk.png';
+  }
+
   static String onboardingBg(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark
         ? 'assets/images/onboarding/background_pattern_dark.svg'

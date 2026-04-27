@@ -1,10 +1,17 @@
 import 'package:country_code_picker/country_code_picker.dart';
+import 'package:country_flags_plus/country_flags_plus.dart';
+import 'package:dogardairy/models/country_model.dart';
+import 'package:dogardairy/models/state_model.dart';
+import 'package:dogardairy/services/api_service.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hugeicons_pro/hugeicons.dart';
-import '/theme/theme.dart';
-import 'dart:convert';
+import 'package:step_progress/step_progress.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '/theme/theme.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -14,6 +21,7 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
+  late StepProgressController _stepProgressController;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -22,20 +30,27 @@ class _SignupScreenState extends State<SignupScreen> {
       TextEditingController();
   final TextEditingController _contactController = TextEditingController();
 
+  // Location Form
+  final TextEditingController _countrySearchController =
+      TextEditingController();
+  final TextEditingController _stateSearchController = TextEditingController();
+  final TextEditingController _citySearchController = TextEditingController();
+
   bool _isFormValid = false;
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureCPassword = true;
   bool get _isFormDisabled => _isLoading || !_isFormValid;
-  CountryCode _selectedCountryCode = CountryCode.fromCountryCode('IN');
+  CountryCode _selectedCountryCode = CountryCode.fromCountryCode('PK');
 
   int _currentStep = 0; // 0 = personal info, 1 = location
   int _previousStep = 0;
-  String _selectedCountry = '';
-  String _selectedState = '';
+  bool _isForward = true;
+  CountryModel? _selectedCountry;
+  StateModel? _selectedState;
   String _selectedCity = '';
-  List<String> _countries = [];
-  List<String> _states = [];
+  List<CountryModel> _countries = [];
+  List<StateModel> _states = [];
   List<String> _cities = [];
   bool _isLoadingCountries = true;
   bool _isLoadingStates = false;
@@ -49,6 +64,9 @@ class _SignupScreenState extends State<SignupScreen> {
     _passwordController.addListener(_validateForm);
     _confirmPasswordController.addListener(_validateForm);
     _contactController.addListener(_validateForm);
+    _stepProgressController = StepProgressController(totalSteps: 3);
+    _stepProgressController.setCurrentStep(_currentStep);
+    _selectedCountryCode = CountryCode.fromCountryCode('PK');
     _fetchCountries();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _validateForm();
@@ -62,20 +80,36 @@ class _SignupScreenState extends State<SignupScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _contactController.dispose();
+    _stepProgressController.dispose();
+    _countrySearchController.dispose();
+    _stateSearchController.dispose();
+    _citySearchController.dispose();
     super.dispose();
   }
 
+  void _goToStep(int newStep) {
+    setState(() {
+      _isForward = newStep > _currentStep;
+      _previousStep = _currentStep;
+      _currentStep = newStep;
+    });
+  }
+
   Future<void> _fetchCountries() async {
-    final response = await http.get(
-      Uri.parse('https://countriesnow.space/api/v0.1/countries/positions'),
-    );
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      setState(() {
-        _countries = List<String>.from(data['data'].map((e) => e['name']));
-        _isLoadingCountries = false;
-        _validateForm();
-      });
+    setState(() => _isLoadingCountries = true);
+
+    try {
+      final response = await ApiService.getAllCountries();
+      if (response.error == false) {
+        setState(() {
+          _countries = response.countries;
+          _isLoadingCountries = false;
+          _validateForm();
+        });
+      }
+    } catch (e) {
+      print("fetch countries error: $e");
+      setState(() => _isLoadingCountries = false);
     }
   }
 
@@ -84,21 +118,18 @@ class _SignupScreenState extends State<SignupScreen> {
       _isLoadingStates = true;
     });
 
-    final response = await http.post(
-      Uri.parse('https://countriesnow.space/api/v0.1/countries/states'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'country': country}),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      setState(() {
-        _states = List<String>.from(
-          data['data']['states'].map((e) => e['name']),
-        );
-        _isLoadingStates = false;
-        _validateForm();
-      });
+    try {
+      final response = await ApiService.getAllStates(country);
+      if (response.error == false) {
+        setState(() {
+          _states = response.states;
+          _isLoadingStates = false;
+          _validateForm();
+        });
+      }
+    } catch (e) {
+      print("fetch states error: $e");
+      setState(() => _isLoadingStates = false);
     }
   }
 
@@ -107,19 +138,18 @@ class _SignupScreenState extends State<SignupScreen> {
       _isLoadingCities = true;
     });
 
-    final response = await http.post(
-      Uri.parse('https://countriesnow.space/api/v0.1/countries/state/cities'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'country': country, 'state': state}),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      setState(() {
-        _cities = List<String>.from(data['data']);
-        _isLoadingCities = false;
-        _validateForm();
-      });
+    try {
+      final response = await ApiService.getAllCities(country, state);
+      if (response.error == false) {
+        setState(() {
+          _cities = response.cities;
+          _isLoadingCities = false;
+          _validateForm();
+        });
+      }
+    } catch (e) {
+      print("fetch cities error: $e");
+      setState(() => _isLoadingCities = false);
     }
   }
 
@@ -156,8 +186,8 @@ class _SignupScreenState extends State<SignupScreen> {
           RegExp(r'^[0-9]+$').hasMatch(_contactController.text);
     } else {
       // Validate location fields for step 2
-      return _selectedCountry.isNotEmpty &&
-          _selectedState.isNotEmpty &&
+      return _selectedCountry != null &&
+          _selectedState != null &&
           _selectedCity.isNotEmpty;
     }
   }
@@ -171,42 +201,124 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     Widget child = Scaffold(
-      body: Center(
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 600),
-          transitionBuilder: (child, animation) {
-            final isForward = _currentStep >= _previousStep;
-
-            final offsetAnimation = Tween<Offset>(
-              begin: isForward
-                  ? const Offset(1.0, 0.0)
-                  : const Offset(-1.0, 0.0),
-              end: Offset.zero,
-            ).animate(animation);
-
-            final fadeAnimation = Tween<double>(
-              begin: 0.0,
-              end: 1.0,
-            ).animate(animation);
-
-            return FadeTransition(
-              opacity: fadeAnimation,
-              child: SlideTransition(position: offsetAnimation, child: child),
-            );
-          },
-          child: SingleChildScrollView(
-            key: ValueKey(_currentStep), // important for AnimatedSwitcher
-            child: IntrinsicHeight(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (_currentStep == 0) _buildPersonalInfoForm(),
-                  if (_currentStep == 1) _buildContactForm(),
-                  if (_currentStep == 2) _buildLocationForm(),
-                ],
+      body: Form(
+        key: _formKey,
+        onChanged: _validateForm,
+        child: Stack(
+          children: [
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: StepProgress(
+                totalSteps: 3,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 130,
+                  vertical: 30,
+                ),
+                controller: _stepProgressController,
+                currentStep: _currentStep,
+                onStepChanged: (index) => _goToStep(index),
+                // lineSubTitles: const ['Step 2', 'Step 3'],
+                nodeIconBuilder: (index, completedStepIndex) {
+                  if (index <= completedStepIndex) {
+                    return Text(
+                      '${index + 1}',
+                      style: AppTheme.textLabel(context).copyWith(
+                        fontFamily: 'Poppins',
+                        fontSize: 20,
+                        color: AppColor.white,
+                      ),
+                    );
+                  } else {
+                    return Text(
+                      '${index + 1}',
+                      style: AppTheme.textSearchInfoLabeled(context).copyWith(
+                        fontFamily: 'Poppins',
+                        fontSize: 20,
+                        color: AppTheme.iconColorThree(context),
+                      ),
+                    );
+                  }
+                },
+                theme: StepProgressThemeData(
+                  stepLineSpacing: 24,
+                  defaultForegroundColor:
+                      Theme.of(context).brightness == Brightness.dark
+                      ? AppColor.neutral_70
+                      : AppColor.neutral_10,
+                  activeForegroundColor: AppColor.primary_50,
+                  // borderStyle: OuterBorderStyle(
+                  //   borderWidth: 3,
+                  //   defaultBorderColor: AppColor.neutral_70,
+                  //   activeBorderColor: AppColor.primary_50,
+                  // ),
+                  stepLineStyle: StepLineStyle(
+                    lineThickness: 8,
+                    isBreadcrumb: false,
+                    borderRadius: Radius.circular(10),
+                  ),
+                  lineLabelAlignment: Alignment.bottomCenter,
+                  lineLabelStyle: StepLabelStyle(
+                    margin: EdgeInsets.only(top: 5),
+                  ),
+                ),
               ),
             ),
-          ),
+            Center(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 600),
+                transitionBuilder: (child, animation) {
+                  // ✅ Outgoing slide (reverse direction)
+                  final offsetAnimation =
+                      Tween<Offset>(
+                        begin: _isForward
+                            ? const Offset(
+                                1.0,
+                                0.0,
+                              ) // forward → slide from right
+                            : const Offset(
+                                -1.0,
+                                0.0,
+                              ), // backward → slide from left
+                        end: Offset.zero,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeInOut, // ✅ smooth curve
+                        ),
+                      );
+
+                  final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0)
+                      .animate(
+                        CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeIn,
+                        ),
+                      );
+
+                  return FadeTransition(
+                    opacity: fadeAnimation,
+                    child: SlideTransition(
+                      position: offsetAnimation,
+                      child: child,
+                    ),
+                  );
+                },
+                child: SingleChildScrollView(
+                  key: ValueKey(_currentStep), // ✅ triggers animation
+                  child: Column(
+                    children: [
+                      if (_currentStep == 0) _buildPersonalInfoForm(),
+                      if (_currentStep == 1)
+                        _buildContactForm(), // ✅ CountryCode state preserved
+                      if (_currentStep == 2) _buildLocationForm(),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -227,417 +339,493 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Widget _buildPersonalInfoForm() {
-    return Form(
-      key: _formKey,
-      onChanged: _validateForm,
-      child: Padding(
-        padding: const EdgeInsets.all(30.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Image.asset(AppTheme.appLogo(context), height: 100, width: 100),
-            const SizedBox(height: 40),
-            Text(
-              "Personal Information",
-              style: AppTheme.textTitle(context),
-              textAlign: TextAlign.start,
-            ),
-            const SizedBox(height: 20),
-            TextFormField(
-              controller: _nameController,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              decoration: InputDecoration(
-                labelText: 'Full Name*',
-                hintText: 'e.g. David Smith',
-                counter: const SizedBox.shrink(),
-                prefixIcon: Padding(
-                  padding: const EdgeInsets.only(left: 16.0, right: 8.0),
-                  child: Icon(HugeIconsSolid.user03),
-                ),
-                suffixIcon: _isLoading
-                    ? null
-                    : _nameController.text.isNotEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: IconButton(
-                          icon: Icon(HugeIconsStroke.cancel02),
-                          onPressed: () {
-                            _nameController.clear(); // Clear the text field
-                          },
-                        ),
-                      )
-                    : null,
+    return Padding(
+      padding: const EdgeInsets.all(30.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Image.asset(AppTheme.appLogo(context), height: 100, width: 100),
+          const SizedBox(height: 40),
+          Text(
+            "Personal Information",
+            style: AppTheme.textTitle(context),
+            textAlign: TextAlign.start,
+          ),
+          const SizedBox(height: 20),
+          TextFormField(
+            controller: _nameController,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            decoration: InputDecoration(
+              labelText: 'Full Name*',
+              hintText: 'e.g. David Smith',
+              counter: const SizedBox.shrink(),
+              prefixIcon: Padding(
+                padding: const EdgeInsets.only(left: 16.0, right: 8.0),
+                child: Icon(HugeIconsSolid.user03),
               ),
-              style: AppInputDecoration.inputTextStyle(context),
-              keyboardType: TextInputType.text,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your full name';
-                } else if (value.length < 3) {
-                  return 'Name must be at least 3 characters long';
-                } else if (!RegExp(r'^[a-zA-Z ]+$').hasMatch(value)) {
-                  return 'Name must contain only letters';
-                }
-                return null;
-              },
-              maxLength: 20,
+              suffixIcon: _isLoading
+                  ? null
+                  : _nameController.text.isNotEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: IconButton(
+                        icon: Icon(HugeIconsStroke.cancel02),
+                        onPressed: () {
+                          _nameController.clear(); // Clear the text field
+                        },
+                      ),
+                    )
+                  : null,
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _emailController,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              decoration: InputDecoration(
-                labelText: 'Email Address*',
-                hintText: 'e.g. david@example.com',
-                counter: const SizedBox.shrink(),
-                prefixIcon: Padding(
-                  padding: const EdgeInsets.only(left: 16.0, right: 8.0),
-                  child: Icon(HugeIconsSolid.mail02),
-                ),
-                suffixIcon: _isLoading
-                    ? null
-                    : _emailController.text.isNotEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: IconButton(
-                          icon: Icon(HugeIconsStroke.cancel02),
-                          onPressed: () {
-                            _emailController.clear(); // Clear the text field
-                          },
-                        ),
-                      )
-                    : null,
+            style: AppInputDecoration.inputTextStyle(context),
+            keyboardType: TextInputType.text,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your full name';
+              } else if (value.length < 3) {
+                return 'Name must be at least 3 characters long';
+              } else if (!RegExp(r'^[a-zA-Z ]+$').hasMatch(value)) {
+                return 'Name must contain only letters';
+              }
+              return null;
+            },
+            maxLength: 20,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _emailController,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            decoration: InputDecoration(
+              labelText: 'Email Address*',
+              hintText: 'e.g. david@example.com',
+              counter: const SizedBox.shrink(),
+              prefixIcon: Padding(
+                padding: const EdgeInsets.only(left: 16.0, right: 8.0),
+                child: Icon(HugeIconsSolid.mail02),
               ),
-              style: AppInputDecoration.inputTextStyle(context),
-              keyboardType: TextInputType.emailAddress,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your email address';
-                } else if (value.length < 5) {
-                  return 'Email Address must be at least 5 characters long';
-                } else if (!RegExp(
-                  r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-                ).hasMatch(value)) {
-                  return 'Please enter a valid email address';
-                }
-                return null;
-              },
-              maxLength: 40,
+              suffixIcon: _isLoading
+                  ? null
+                  : _emailController.text.isNotEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: IconButton(
+                        icon: Icon(HugeIconsStroke.cancel02),
+                        onPressed: () {
+                          _emailController.clear(); // Clear the text field
+                        },
+                      ),
+                    )
+                  : null,
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _passwordController,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              decoration: InputDecoration(
-                labelText: 'Password*',
-                hintText: 'e.g. dav*****',
-                counter: const SizedBox.shrink(),
-                prefixIcon: Padding(
-                  padding: const EdgeInsets.only(left: 16.0, right: 8.0),
-                  child: Icon(HugeIconsSolid.lockKey),
-                ),
-                suffixIcon: Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? HugeIconsSolid.viewOff
-                          : HugeIconsSolid.eye,
-                    ),
-                    splashRadius: 20, // Smaller tap area
-                    onPressed: () {
-                      setState(() => _obscurePassword = !_obscurePassword);
-                    },
+            style: AppInputDecoration.inputTextStyle(context),
+            keyboardType: TextInputType.emailAddress,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your email address';
+              } else if (value.length < 5) {
+                return 'Email Address must be at least 5 characters long';
+              } else if (!RegExp(
+                r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+              ).hasMatch(value)) {
+                return 'Please enter a valid email address';
+              }
+              return null;
+            },
+            maxLength: 40,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _passwordController,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            decoration: InputDecoration(
+              labelText: 'Password*',
+              hintText: 'e.g. dav*****',
+              counter: const SizedBox.shrink(),
+              prefixIcon: Padding(
+                padding: const EdgeInsets.only(left: 16.0, right: 8.0),
+                child: Icon(HugeIconsSolid.lockKey),
+              ),
+              suffixIcon: Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: IconButton(
+                  icon: Icon(
+                    _obscurePassword
+                        ? HugeIconsSolid.viewOff
+                        : HugeIconsSolid.eye,
                   ),
+                  splashRadius: 20, // Smaller tap area
+                  onPressed: () {
+                    setState(() => _obscurePassword = !_obscurePassword);
+                  },
                 ),
               ),
-              style: AppInputDecoration.inputTextStyle(context),
-              obscureText: _obscurePassword,
-              obscuringCharacter: '•',
-              keyboardType: TextInputType.visiblePassword,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your password';
-                } else if (value.length < 8) {
-                  return 'Password must be at least 8 characters long';
-                }
-                return null;
-              },
-              maxLength: 20,
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _confirmPasswordController,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              decoration: InputDecoration(
-                labelText: 'Confirm Password*',
-                hintText: 'e.g. dav*****',
-                counter: const SizedBox.shrink(),
-                prefixIcon: Padding(
-                  padding: const EdgeInsets.only(left: 16.0, right: 8.0),
-                  child: Icon(HugeIconsSolid.lockKey),
-                ),
-                suffixIcon: Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: IconButton(
-                    icon: Icon(
-                      _obscureCPassword
-                          ? HugeIconsSolid.viewOff
-                          : HugeIconsSolid.eye,
-                    ),
-                    splashRadius: 20, // Smaller tap area
-                    onPressed: () {
-                      setState(() => _obscureCPassword = !_obscureCPassword);
-                    },
+            style: AppInputDecoration.inputTextStyle(context),
+            obscureText: _obscurePassword,
+            obscuringCharacter: '•',
+            keyboardType: TextInputType.visiblePassword,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your password';
+              } else if (value.length < 8) {
+                return 'Password must be at least 8 characters long';
+              }
+              return null;
+            },
+            maxLength: 20,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _confirmPasswordController,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            decoration: InputDecoration(
+              labelText: 'Confirm Password*',
+              hintText: 'e.g. dav*****',
+              counter: const SizedBox.shrink(),
+              prefixIcon: Padding(
+                padding: const EdgeInsets.only(left: 16.0, right: 8.0),
+                child: Icon(HugeIconsSolid.lockKey),
+              ),
+              suffixIcon: Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: IconButton(
+                  icon: Icon(
+                    _obscureCPassword
+                        ? HugeIconsSolid.viewOff
+                        : HugeIconsSolid.eye,
                   ),
+                  splashRadius: 20, // Smaller tap area
+                  onPressed: () {
+                    setState(() => _obscureCPassword = !_obscureCPassword);
+                  },
                 ),
               ),
-              style: AppInputDecoration.inputTextStyle(context),
-              obscureText: _obscureCPassword,
-              obscuringCharacter: '•',
-              keyboardType: TextInputType.visiblePassword,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your confirm password';
-                } else if (value.length < 8) {
-                  return 'Confirm Password must be at least 8 characters long';
-                } else if (value != _passwordController.text) {
-                  return 'Confirm Passwords do not match';
-                }
-                return null;
-              },
-              maxLength: 20,
             ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              spacing: 16,
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: OutlineButton(
-                    text: 'Cancel',
-                    disabled: _isLoading,
-                    onPressed: _isLoading
-                        ? null
-                        : () {
-                            Navigator.pop(context);
-                          },
-                  ),
+            style: AppInputDecoration.inputTextStyle(context),
+            obscureText: _obscureCPassword,
+            obscuringCharacter: '•',
+            keyboardType: TextInputType.visiblePassword,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your confirm password';
+              } else if (value.length < 8) {
+                return 'Confirm Password must be at least 8 characters long';
+              } else if (value != _passwordController.text) {
+                return 'Confirm Passwords do not match';
+              }
+              return null;
+            },
+            maxLength: 20,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            spacing: 16,
+            children: [
+              Expanded(
+                flex: 1,
+                child: OutlineButton(
+                  text: 'Cancel',
+                  disabled: _isLoading,
+                  onPressed: _isLoading
+                      ? null
+                      : () {
+                          Navigator.pop(context);
+                        },
                 ),
-                Expanded(
-                  flex: 1,
-                  child: FlatButton(
-                    text: 'Next',
-                    disabled: !_isFormValid || _isLoading,
-                    onPressed: (_isFormValid && !_isLoading)
-                        ? () {
-                            if (_validateCurrentStep()) {
-                              setState(() {
-                                _previousStep = _currentStep;
-                                _currentStep = 1;
-                              });
-                            }
+              ),
+              Expanded(
+                flex: 1,
+                child: FlatButton(
+                  text: 'Next',
+                  disabled: !_isFormValid || _isLoading,
+                  onPressed: (_isFormValid && !_isLoading)
+                      ? () {
+                          if (_validateCurrentStep()) {
+                            _stepProgressController.nextStep();
+                            _goToStep(1);
                           }
-                        : null,
-                    loading: _isLoading,
-                    icon: Icons.arrow_forward_ios_rounded,
-                    iconLeft: false,
-                  ),
+                        }
+                      : null,
+                  loading: _isLoading,
+                  icon: Icons.arrow_forward_ios_rounded,
+                  iconLeft: false,
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildContactForm() {
-    return Form(
-      key: _formKey,
-      onChanged: _validateForm,
-      child: Padding(
-        padding: const EdgeInsets.all(30.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Image.asset(AppTheme.appLogo(context), height: 100, width: 100),
-            const SizedBox(height: 40),
-            Text(
-              "Contact Number",
-              style: AppTheme.textTitle(context),
-              textAlign: TextAlign.start,
-            ),
-            const SizedBox(height: 20),
-            TextFormField(
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              controller: _contactController,
-              style: AppInputDecoration.inputTextStyle(context),
-              keyboardType: TextInputType.phone,
-              decoration: InputDecoration(
-                labelText: 'Phone Number*',
-                hintText: 'e.g. 1234567890',
-                counter: const SizedBox.shrink(),
-                prefixIcon: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CountryCodePicker(
-                        onChanged: (country) {
-                          setState(() {
-                            _selectedCountryCode = country;
+    return Padding(
+      padding: const EdgeInsets.all(30.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Image.asset(AppTheme.appLogo(context), height: 100, width: 100),
+          const SizedBox(height: 40),
+          Text(
+            "Contact Number",
+            style: AppTheme.textTitle(context),
+            textAlign: TextAlign.start,
+          ),
+          const SizedBox(height: 20),
+          TextFormField(
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            controller: _contactController,
+            style: AppInputDecoration.inputTextStyle(context),
+            keyboardType: TextInputType.phone,
+            decoration: InputDecoration(
+              labelText: 'Contact Number*',
+              hintText: 'e.g. 1234567890',
+              counter: const SizedBox.shrink(),
+              prefixIcon: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CountryCodePicker(
+                      initialSelection: _selectedCountryCode.code ?? 'PK',
+                      onInit: (country) {
+                        if (country != null && mounted) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            setState(() {
+                              _selectedCountryCode = country;
+                            });
                           });
-                        },
-                        builder: (country) =>
-                            AppInputDecoration.buildCountryCodeButton(
-                              context,
-                              country,
-                            ),
-                        padding: EdgeInsets.zero,
-                        boxDecoration: AppTheme.dialogBg(context),
-                        flagDecoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        flagWidth: 30,
-                        showCountryOnly: false,
-                        showOnlyCountryWhenClosed: false,
-                        initialSelection: 'IN',
-                        favorite: ['US', 'GB', 'IN'],
-                        alignLeft: false,
-                        showFlag: true,
-                        showFlagDialog: true,
-                        searchStyle: AppInputDecoration.inputTextStyle(context),
-                        textStyle: AppInputDecoration.inputTextStyle(context),
-                        dialogTextStyle: AppInputDecoration.inputTextStyle(
-                          context,
-                        ),
-                        dialogBackgroundColor: AppTheme.screenBg(context),
-                        headerTextStyle: AppTheme.textTitle(context),
-                        headerText: 'Select Country/Region',
-                        dialogSize: Size(
-                          MediaQuery.of(context).size.width * 0.9,
-                          400,
-                        ),
+                        }
+                      },
+                      onChanged: (country) {
+                        setState(() {
+                          _selectedCountryCode = country;
+                        });
+                      },
+                      builder: (country) =>
+                          AppInputDecoration.buildCountryCodeButton(
+                            context,
+                            country,
+                          ),
+                      padding: EdgeInsets.zero,
+                      boxDecoration: AppTheme.dialogBg(context),
+                      flagDecoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
                       ),
-                      Container(height: 20, width: 1, color: Colors.grey),
-                    ],
-                  ),
-                ),
-                suffixIcon: _isLoading
-                    ? null
-                    : _contactController.text.isNotEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: IconButton(
-                          icon: Icon(HugeIconsStroke.cancel02),
-                          onPressed: () {
-                            _contactController.clear(); // Clear the text field
-                          },
-                        ),
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                contentPadding: EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 16,
+                      flagWidth: 30,
+                      showCountryOnly: false,
+                      showOnlyCountryWhenClosed: false,
+                      favorite: ['PK'],
+                      alignLeft: false,
+                      showFlag: true,
+                      showFlagDialog: true,
+                      searchStyle: AppInputDecoration.inputTextStyle(context),
+                      textStyle: AppInputDecoration.inputTextStyle(context),
+                      dialogTextStyle: AppInputDecoration.inputTextStyle(
+                        context,
+                      ),
+                      dialogBackgroundColor: AppTheme.screenBg(context),
+                      headerTextStyle: AppTheme.textTitle(context),
+                      headerText: 'Select Country/Region',
+                      // dialogSize: Size(
+                      //   MediaQuery.of(context).size.width * 0.9,
+                      //   400,
+                      // ),
+                      closeIcon: Icon(HugeIconsStroke.cancel01),
+                      pickerStyle: PickerStyle.dialog,
+                      dialogItemPadding: EdgeInsetsGeometry.all(20),
+                      searchDecoration: InputDecoration(
+                        label: Text("Search Countries/Region"),
+                        prefixIcon: Icon(HugeIconsSolid.search01),
+                      ),
+                      barrierColor: Colors.transparent,
+                    ),
+                    Container(height: 20, width: 1, color: Colors.grey),
+                  ],
                 ),
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your phone number';
-                } else if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
-                  return 'Only digits allowed';
-                } else if (value.length < 8) {
-                  return 'Phone Number too short';
-                }
-                return null;
-              },
-              maxLength: 15,
+              suffixIcon: _isLoading
+                  ? null
+                  : _contactController.text.isNotEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: IconButton(
+                        icon: Icon(HugeIconsStroke.cancel02),
+                        onPressed: () {
+                          _contactController.clear(); // Clear the text field
+                        },
+                      ),
+                    )
+                  : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                vertical: 16,
+                horizontal: 16,
+              ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              "We'll call or text you to confirm your number. Standard message and data rates may apply.",
-              style: AppTheme.textLabel(context).copyWith(fontSize: 12),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              spacing: 16,
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: OutlineButton(
-                    text: 'Back',
-                    disabled: _isLoading,
-                    onPressed: () {
-                      setState(() {
-                        _previousStep = _currentStep;
-                        _currentStep = 0;
-                        _validateForm();
-                      });
-                    },
-                    icon: Icons.arrow_back_ios_rounded,
-                  ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your phone number';
+              } else if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
+                return 'Only digits allowed';
+              } else if (value.length < 8) {
+                return 'Phone Number too short';
+              }
+              return null;
+            },
+            maxLength: 15,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "We'll call or text you to confirm your number. Standard message and data rates may apply.",
+            style: AppTheme.textLabel(context).copyWith(fontSize: 12),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            spacing: 16,
+            children: [
+              Expanded(
+                flex: 1,
+                child: OutlineButton(
+                  text: 'Back',
+                  disabled: _isLoading,
+                  onPressed: () {
+                    _stepProgressController.previousStep();
+                    _goToStep(0);
+                    setState(() {
+                      _validateForm();
+                    });
+                  },
+                  icon: Icons.arrow_back_ios_rounded,
                 ),
-                Expanded(
-                  flex: 1,
-                  child: FlatButton(
-                    text: 'Next',
-                    disabled: !_isFormValid || _isLoading,
-                    onPressed: (_isFormValid && !_isLoading)
-                        ? () {
-                            if (_validateCurrentStep()) {
-                              setState(() {
-                                _previousStep = _currentStep;
-                                _currentStep = 2;
-                              });
-                            }
+              ),
+              Expanded(
+                flex: 1,
+                child: FlatButton(
+                  text: 'Next',
+                  disabled: !_isFormValid || _isLoading,
+                  onPressed: (_isFormValid && !_isLoading)
+                      ? () {
+                          if (_validateCurrentStep()) {
+                            _stepProgressController.nextStep();
+                            _goToStep(2);
                           }
-                        : null,
-                    loading: _isLoading,
-                    icon: Icons.arrow_forward_ios_rounded,
-                    iconLeft: false,
-                  ),
+                        }
+                      : null,
+                  loading: _isLoading,
+                  icon: Icons.arrow_forward_ios_rounded,
+                  iconLeft: false,
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildLocationForm() {
-    return Form(
-      key: _formKey,
-      onChanged: _validateForm,
-      child: Padding(
-        padding: const EdgeInsets.all(30.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Image.asset(AppTheme.appLogo(context), height: 100, width: 100),
-            const SizedBox(height: 40),
-            Text(
-              "Where are you located?",
-              style: AppTheme.textTitle(context),
-              textAlign: TextAlign.start,
-            ),
-            const SizedBox(height: 20),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedCountry.isEmpty ? null : _selectedCountry,
+    return Padding(
+      padding: const EdgeInsets.all(30.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Image.asset(AppTheme.appLogo(context), height: 100, width: 100),
+          const SizedBox(height: 40),
+          Text(
+            "Where are you located?",
+            style: AppTheme.textTitle(context),
+            textAlign: TextAlign.start,
+          ),
+          const SizedBox(height: 20),
+
+          DropdownButtonHideUnderline(
+            child: DropdownButtonFormField2<CountryModel>(
+              isExpanded: true,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+
               decoration: InputDecoration(
-                labelText: 'Country*',
+                labelText: "Country*",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 prefixIcon: Padding(
-                  padding: const EdgeInsets.only(left: 16.0, right: 8.0),
+                  padding: const EdgeInsets.only(left: 16.0, right: 6),
                   child: Icon(HugeIconsSolid.globe),
                 ),
               ),
+              value: _selectedCountry,
+              validator: (value) =>
+                  value == null ? 'Please select a country' : null,
+              dropdownSearchData: DropdownSearchData<CountryModel>(
+                searchController:
+                    _countrySearchController, // ✅ search controller
+                searchInnerWidgetHeight: 50,
+                searchInnerWidget: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  child: TextFormField(
+                    controller: _countrySearchController,
+                    style: AppTheme.textLabel(context).copyWith(fontSize: 16),
+                    decoration: InputDecoration(
+                      isDense: false,
+                      fillColor: Theme.of(context).brightness == Brightness.dark
+                          ? AppColor.neutral_90
+                          : AppColor.white,
+                      labelText: 'Search country...',
+                      // hintStyle: AppTheme.textLabel(
+                      //   context,
+                      // ).copyWith(fontSize: 14, color: AppColor.neutral_40),
+                      prefixIcon: const Icon(
+                        HugeIconsStroke.search01,
+                        size: 22,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+                // ✅ Filter logic
+                searchMatchFn: (item, searchValue) {
+                  return item.value!.name.toLowerCase().contains(
+                    searchValue.toLowerCase(),
+                  );
+                },
+              ),
+
+              // ✅ Clear search when dropdown closes
+              onMenuStateChange: (isOpen) {
+                if (!isOpen) {
+                  _countrySearchController.clear();
+                }
+              },
+              onChanged: _isLoadingCountries
+                  ? null
+                  : (CountryModel? value) {
+                      setState(() {
+                        _selectedCountry = value;
+                        _selectedState = null; // ✅ reset
+                        _selectedCity = ''; // ✅ reset
+                        _states = [];
+                        _cities = [];
+                      });
+                      _validateForm();
+                      if (value != null) {
+                        _fetchStates(value.name);
+                      }
+                    },
               items: _isLoadingCountries
                   ? [
                       DropdownMenuItem(
@@ -649,44 +837,165 @@ class _SignupScreenState extends State<SignupScreen> {
                             child: CircularProgressIndicator(
                               color: AppTheme.inputProgress(context),
                               strokeWidth: 2,
+                              strokeCap: StrokeCap.round,
                             ),
                           ),
                         ),
                       ),
                     ]
-                  : _countries.map((String country) {
-                      return DropdownMenuItem<String>(
+                  : _countries.map((CountryModel country) {
+                      return DropdownMenuItem<CountryModel>(
                         value: country,
-                        child: Text(country),
+                        child: Row(
+                          spacing: 12,
+                          children: [
+                            CountryFlag.fromCountryCode(
+                              country.iso2,
+                              theme: const ImageTheme(
+                                width: 30,
+                                height: 20,
+                                shape: RoundedRectangle(4),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                country.name,
+                                style: AppTheme.textLabel(
+                                  context,
+                                ).copyWith(fontSize: 17),
+                              ),
+                            ),
+
+                            if (_selectedCountry == country)
+                              Icon(
+                                HugeIconsSolid.checkmarkCircle01,
+                                size: 20,
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColor.neutral_70
+                                    : AppColor.primary_50,
+                              ),
+                          ],
+                        ),
                       );
                     }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedCountry = newValue ?? '';
-                  _selectedState = '';
-                  _selectedCity = '';
-                  _states = [];
-                  _cities = [];
-                });
-                _validateForm();
-                if (_selectedCountry.isNotEmpty) {
-                  _fetchStates(_selectedCountry);
-                }
-              },
-              validator: (value) =>
-                  value == null ? 'Please select a country' : null,
-              icon: const Icon(Icons.arrow_drop_down_rounded),
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedState.isEmpty ? null : _selectedState,
-              decoration: InputDecoration(
-                labelText: 'State*',
-                prefixIcon: Padding(
-                  padding: const EdgeInsets.only(left: 16.0, right: 8.0),
-                  child: Icon(HugeIconsSolid.location02),
+
+              iconStyleData: IconStyleData(
+                icon: Icon(
+                  HugeIconsSolid.arrowDown01,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColor.neutral_40
+                      : AppColor.neutral_40,
+                ),
+                iconSize: 14,
+              ),
+
+              dropdownStyleData: DropdownStyleData(
+                maxHeight: 260,
+                elevation: 0,
+                scrollPadding: EdgeInsets.all(0),
+                padding: EdgeInsets.all(0),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColor.neutral_80
+                      : AppColor.neutral_5,
+                ),
+                offset: const Offset(0, -5),
+                useSafeArea: true,
+                scrollbarTheme: ScrollbarThemeData(
+                  radius: const Radius.circular(40),
+                  thickness: MaterialStateProperty.all(5),
                 ),
               ),
+
+              menuItemStyleData: const MenuItemStyleData(
+                height: 40,
+                padding: EdgeInsets.symmetric(horizontal: 12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          DropdownButtonHideUnderline(
+            child: DropdownButtonFormField2<StateModel>(
+              isExpanded: true,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+
+              decoration: InputDecoration(
+                labelText: "State*",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.only(left: 16.0, right: 6),
+                  child: Icon(HugeIconsSolid.mapsLocation01),
+                ),
+              ),
+              value: _selectedState,
+              validator: (value) =>
+                  value == null ? 'Please select a state' : null,
+              dropdownSearchData: DropdownSearchData<StateModel>(
+                searchController: _stateSearchController,
+                searchInnerWidgetHeight: 50,
+                searchInnerWidget: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  child: TextFormField(
+                    controller: _stateSearchController,
+                    style: AppTheme.textLabel(context).copyWith(fontSize: 16),
+                    decoration: InputDecoration(
+                      isDense: false,
+                      fillColor: Theme.of(context).brightness == Brightness.dark
+                          ? AppColor.neutral_90
+                          : AppColor.white,
+                      labelText: 'Search state...',
+                      prefixIcon: const Icon(
+                        HugeIconsStroke.search01,
+                        size: 22,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+                // ✅ Filter logic
+                searchMatchFn: (item, searchValue) {
+                  return item.value!.name.toLowerCase().contains(
+                    searchValue.toLowerCase(),
+                  );
+                },
+              ),
+
+              // ✅ Clear search when dropdown closes
+              onMenuStateChange: (isOpen) {
+                if (!isOpen) {
+                  _stateSearchController.clear();
+                }
+              },
+              onChanged: _selectedCountry == null
+                  ? null
+                  : (StateModel? value) {
+                      setState(() {
+                        _selectedState = value;
+                        _selectedCity = '';
+                        _cities = [];
+                      });
+                      _validateForm();
+                      if (value != null) {
+                        _fetchCities(
+                          _selectedCountry!.name,
+                          _selectedState!.name,
+                        );
+                      }
+                    },
               items: _isLoadingStates
                   ? [
                       DropdownMenuItem(
@@ -698,44 +1007,152 @@ class _SignupScreenState extends State<SignupScreen> {
                             child: CircularProgressIndicator(
                               color: AppTheme.inputProgress(context),
                               strokeWidth: 2,
+                              strokeCap: StrokeCap.round,
                             ),
                           ),
                         ),
                       ),
                     ]
-                  : _states.map((String state) {
-                      return DropdownMenuItem<String>(
+                  : _states.map((StateModel state) {
+                      return DropdownMenuItem<StateModel>(
                         value: state,
-                        child: Text(state),
+                        child: Row(
+                          spacing: 12,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                state.name,
+                                style: AppTheme.textLabel(
+                                  context,
+                                ).copyWith(fontSize: 17),
+                              ),
+                            ),
+
+                            if (_selectedState == state)
+                              Icon(
+                                HugeIconsSolid.checkmarkCircle01,
+                                size: 20,
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColor.neutral_70
+                                    : AppColor.primary_50,
+                              ),
+                          ],
+                        ),
                       );
                     }).toList(),
-              onChanged: _selectedCountry.isEmpty
-                  ? null
-                  : (String? newValue) {
-                      setState(() {
-                        _selectedState = newValue ?? '';
-                        _selectedCity = '';
-                        _cities = [];
-                      });
-                      _validateForm();
-                      if (_selectedState.isNotEmpty) {
-                        _fetchCities(_selectedCountry, _selectedState);
-                      }
-                    },
-              validator: (value) =>
-                  value == null ? 'Please select a state' : null,
-              icon: const Icon(Icons.arrow_drop_down_rounded),
+
+              iconStyleData: IconStyleData(
+                icon: Opacity(
+                  opacity: _selectedCountry == null ? 0.3 : 1.0,
+                  child: Icon(
+                    HugeIconsSolid.arrowDown01,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColor.neutral_40
+                        : AppColor.neutral_40,
+                  ),
+                ),
+                iconSize: 14,
+              ),
+
+              dropdownStyleData: DropdownStyleData(
+                maxHeight: 260,
+                elevation: 0,
+                scrollPadding: EdgeInsets.all(0),
+                padding: EdgeInsets.all(0),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColor.neutral_80
+                      : AppColor.neutral_5,
+                ),
+                offset: const Offset(0, -5),
+                useSafeArea: true,
+                scrollbarTheme: ScrollbarThemeData(
+                  radius: const Radius.circular(40),
+                  thickness: MaterialStateProperty.all(5),
+                ),
+              ),
+
+              menuItemStyleData: const MenuItemStyleData(
+                height: 40,
+                padding: EdgeInsets.symmetric(horizontal: 12),
+              ),
             ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedCity.isEmpty ? null : _selectedCity,
+          ),
+          const SizedBox(height: 16),
+          DropdownButtonHideUnderline(
+            child: DropdownButtonFormField2<String>(
+              isExpanded: true,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+
               decoration: InputDecoration(
-                labelText: 'City*',
+                labelText: "City*",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 prefixIcon: Padding(
-                  padding: const EdgeInsets.only(left: 16.0, right: 8.0),
+                  padding: const EdgeInsets.only(left: 16.0, right: 6),
                   child: Icon(HugeIconsSolid.building02),
                 ),
               ),
+              value: _selectedCity.isEmpty ? null : _selectedCity,
+              validator: (value) =>
+                  value == null ? 'Please select a city' : null,
+              dropdownSearchData: DropdownSearchData<String>(
+                searchController: _citySearchController,
+                searchInnerWidgetHeight: 50,
+                searchInnerWidget: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  child: TextFormField(
+                    controller: _citySearchController,
+                    style: AppTheme.textLabel(context).copyWith(fontSize: 16),
+                    decoration: InputDecoration(
+                      isDense: false,
+                      fillColor: Theme.of(context).brightness == Brightness.dark
+                          ? AppColor.neutral_90
+                          : AppColor.white,
+                      labelText: 'Search city...',
+                      prefixIcon: const Icon(
+                        HugeIconsStroke.search01,
+                        size: 22,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+                // ✅ Filter logic
+                searchMatchFn: (item, searchValue) {
+                  return item.value!.toLowerCase().contains(
+                    searchValue.toLowerCase(),
+                  );
+                },
+              ),
+
+              // ✅ Clear search when dropdown closes
+              onMenuStateChange: (isOpen) {
+                if (!isOpen) {
+                  _citySearchController.clear();
+                }
+              },
+              onChanged: _selectedState == null
+                  ? null
+                  : (String? value) {
+                      setState(() {
+                        _selectedCity = value ?? '';
+                      });
+                      _validateForm();
+                    },
               items: _isLoadingCities
                   ? [
                       DropdownMenuItem(
@@ -747,6 +1164,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             child: CircularProgressIndicator(
                               color: AppTheme.inputProgress(context),
                               strokeWidth: 2,
+                              strokeCap: StrokeCap.round,
                             ),
                           ),
                         ),
@@ -755,101 +1173,150 @@ class _SignupScreenState extends State<SignupScreen> {
                   : _cities.map((String city) {
                       return DropdownMenuItem<String>(
                         value: city,
-                        child: Text(city),
+                        child: Row(
+                          spacing: 12,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                city,
+                                style: AppTheme.textLabel(
+                                  context,
+                                ).copyWith(fontSize: 17),
+                              ),
+                            ),
+
+                            if (_selectedCity == city)
+                              Icon(
+                                HugeIconsSolid.checkmarkCircle01,
+                                size: 20,
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColor.neutral_70
+                                    : AppColor.primary_50,
+                              ),
+                          ],
+                        ),
                       );
                     }).toList(),
-              onChanged: _selectedState.isEmpty
-                  ? null
-                  : (String? newValue) {
-                      setState(() {
-                        _selectedCity = newValue ?? '';
-                      });
-                      _validateForm();
-                    },
-              validator: (value) =>
-                  value == null ? 'Please select a city' : null,
-              icon: const Icon(Icons.arrow_drop_down_rounded),
-            ),
-            const SizedBox(height: 16),
-            RichText(
-              textAlign: TextAlign.center,
-              text: TextSpan(
-                style: AppTheme.textLabel(context).copyWith(fontSize: 12),
-                children: [
-                  TextSpan(text: 'By register, you agree to our '),
-                  TextSpan(
-                    text: 'Terms & Condition, ',
-                    style: AppTheme.textLink(context).copyWith(fontSize: 12),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        debugPrint("Terms & Condition clicked");
-                      },
-                  ),
-                  TextSpan(
-                    text: 'Data Policy ',
-                    style: AppTheme.textLink(context).copyWith(fontSize: 12),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        debugPrint("Data Policy clicked");
-                      },
-                  ),
-                  TextSpan(text: 'and '),
-                  TextSpan(
-                    text: 'Cookies Policy.',
-                    style: AppTheme.textLink(context).copyWith(fontSize: 12),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        debugPrint("Cookies Policy clicked");
-                      },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              spacing: 16,
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: OutlineButton(
-                    text: 'Back',
-                    disabled: _isLoading,
-                    onPressed: () {
-                      setState(() {
-                        _previousStep = _currentStep;
-                        _currentStep = 1;
-                        _validateForm();
-                      });
-                    },
-                    icon: Icons.arrow_back_ios_rounded,
+
+              iconStyleData: IconStyleData(
+                icon: Opacity(
+                  opacity: _selectedState == null ? 0.3 : 1.0,
+                  child: Icon(
+                    HugeIconsSolid.arrowDown01,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColor.neutral_40
+                        : AppColor.neutral_40,
                   ),
                 ),
-                Expanded(
-                  flex: 1,
-                  child: FlatButton(
-                    text: 'Register',
-                    disabled: !_isFormValid || _isLoading,
-                    onPressed: (_isFormValid && !_isLoading)
-                        ? () async {
-                            if (!_validateCurrentStep()) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Please complete all fields'),
-                                ),
-                              );
-                              return;
-                            }
-                            await _submitCompleteForm();
-                          }
-                        : null,
-                    loading: _isLoading,
-                  ),
+                iconSize: 14,
+              ),
+
+              dropdownStyleData: DropdownStyleData(
+                maxHeight: 260,
+                elevation: 0,
+                scrollPadding: EdgeInsets.all(0),
+                padding: EdgeInsets.all(0),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColor.neutral_80
+                      : AppColor.neutral_5,
+                ),
+                offset: const Offset(0, -5),
+                useSafeArea: true,
+                scrollbarTheme: ScrollbarThemeData(
+                  radius: const Radius.circular(40),
+                  thickness: MaterialStateProperty.all(5),
+                ),
+              ),
+
+              menuItemStyleData: const MenuItemStyleData(
+                height: 40,
+                padding: EdgeInsets.symmetric(horizontal: 12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style: AppTheme.textLabel(context).copyWith(fontSize: 12),
+              children: [
+                TextSpan(text: 'By register, you agree to our '),
+                TextSpan(
+                  text: 'Terms & Condition, ',
+                  style: AppTheme.textLink(context).copyWith(fontSize: 12),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      debugPrint("Terms & Condition clicked");
+                    },
+                ),
+                TextSpan(
+                  text: 'Data Policy ',
+                  style: AppTheme.textLink(context).copyWith(fontSize: 12),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      debugPrint("Data Policy clicked");
+                    },
+                ),
+                TextSpan(text: 'and '),
+                TextSpan(
+                  text: 'Cookies Policy.',
+                  style: AppTheme.textLink(context).copyWith(fontSize: 12),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      debugPrint("Cookies Policy clicked");
+                    },
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            spacing: 16,
+            children: [
+              Expanded(
+                flex: 1,
+                child: OutlineButton(
+                  text: 'Back',
+                  disabled: _isLoading,
+                  onPressed: () {
+                    _stepProgressController.previousStep();
+                    _goToStep(1);
+                    setState(() {
+                      _validateForm();
+                    });
+                  },
+                  icon: Icons.arrow_back_ios_rounded,
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: FlatButton(
+                  text: 'Register',
+                  disabled: !_isFormValid || _isLoading,
+                  onPressed: (_isFormValid && !_isLoading)
+                      ? () async {
+                          if (!_validateCurrentStep()) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please complete all fields'),
+                              ),
+                            );
+                            return;
+                          }
+                          await _submitCompleteForm();
+                        }
+                      : null,
+                  loading: _isLoading,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

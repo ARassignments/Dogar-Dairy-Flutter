@@ -185,6 +185,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.1"
+  convert:
+    dependency: transitive
+    description:
+      name: convert
+      sha256: b30acd5944035672bc15c6b7a8b47d773e41e2f17de064350988c5d02adb1c68
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.2"
   country_code_picker:
     dependency: "direct main"
     description:
@@ -193,6 +201,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.4.1"
+  country_flags_plus:
+    dependency: "direct main"
+    description:
+      name: country_flags_plus
+      sha256: "84009b466843238b20bf5f2c9434f51cddd11e9f1317b4aec3e312af5862ad56"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   countup:
     dependency: "direct main"
     description:
@@ -749,6 +765,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.1"
+  jovial_misc:
+    dependency: transitive
+    description:
+      name: jovial_misc
+      sha256: "065b5240badae6b13472efdea28fffe8baf914a7831361469a95c6456d9b8dc8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.10.0"
+  jovial_svg:
+    dependency: transitive
+    description:
+      name: jovial_svg
+      sha256: "99e9c3afcf7371ae38083ad52de23677d6d751f46150c3c6ae842e009e84d9f0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.29"
   js:
     dependency: transitive
     description:
@@ -1274,6 +1306,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+  step_progress:
+    dependency: "direct main"
+    description:
+      name: step_progress
+      sha256: "05fafdf9969bc7abe6111c3b27722d1880875974b314bbce8536d65c82acefa5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.7.1"
   stream_channel:
     dependency: transitive
     description:

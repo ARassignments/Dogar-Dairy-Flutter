@@ -1,18 +1,20 @@
-import 'package:dogardairy/components/appsnackbar.dart';
-import 'package:dogardairy/components/dashboard_slider.dart';
-import 'package:dogardairy/components/dialog_logout.dart';
-import 'package:dogardairy/components/menu_drawer.dart';
-import 'package:dogardairy/notifiers/avatar_notifier.dart';
-import 'package:dogardairy/screens/auth/login_screen.dart';
-import 'package:dogardairy/screens/subscription_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-import '/components/loading_screen.dart';
-import '/theme/theme.dart';
-import '/utils/session_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:hugeicons_pro/hugeicons.dart';
+import '/components/appsnackbar.dart';
+import '/components/dashboard_slider.dart';
+import '/components/dialog_logout.dart';
+import '/components/menu_drawer.dart';
+import '/notifiers/avatar_notifier.dart';
+import '/screens/auth/login_screen.dart';
+import '/screens/profile_screen.dart';
+import '/screens/subscription_screen.dart';
+import '/settings/milk_type_settings.dart';
+import '/settings/payment_methods_settings.dart';
+import '/components/loading_screen.dart';
+import '/theme/theme.dart';
+import '/utils/session_manager.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -232,16 +234,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             _buildInfoTile(
                               HugeIconsStroke.user03,
                               "Name",
-                              user!["name"],
+                              user!["name"] ?? "N/A",
                             ),
                             Divider(
                               height: 1,
                               color: AppTheme.dividerBg(context),
                             ),
                             _buildInfoTile(
-                              HugeIconsStroke.mail01,
+                              HugeIconsStroke.mail02,
                               "Email",
-                              user!["email"],
+                              user!["email"] ?? "N/A",
                             ),
                             Divider(
                               height: 1,
@@ -251,7 +253,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               HugeIconsStroke.call02,
                               "Contact",
                               formatInternationalPhone(
-                                "${user!["PhoneNumber"]}",
+                                "${user!["contact"] ?? "N/A"}",
                               ),
                             ),
                             Divider(
@@ -261,44 +263,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             _buildInfoTile(
                               HugeIconsStroke.mapsLocation01,
                               "Address",
-                              user!["Address"],
+                              user!["address"] ?? "N/A",
                             ),
                             SizedBox(
                               width: double.infinity,
                               height: 55,
                               child: FlatButton(
                                 onPressed: () {
-                                  // Navigator.push(
-                                  //   context,
-                                  //   PageRouteBuilder(
-                                  //     opaque: false,
-                                  //     pageBuilder:
-                                  //         (
-                                  //           context,
-                                  //           animation,
-                                  //           secondaryAnimation,
-                                  //         ) => ProfileScreen(),
-                                  //     transitionsBuilder:
-                                  //         (
-                                  //           context,
-                                  //           animation,
-                                  //           secondaryAnimation,
-                                  //           child,
-                                  //         ) {
-                                  //           const begin = Offset(0.0, 1.0);
-                                  //           const end = Offset.zero;
-                                  //           const curve = Curves.easeInOut;
-                                  //           final tween = Tween(
-                                  //             begin: begin,
-                                  //             end: end,
-                                  //           ).chain(CurveTween(curve: curve));
-                                  //           return SlideTransition(
-                                  //             position: animation.drive(tween),
-                                  //             child: child,
-                                  //           );
-                                  //         },
-                                  //   ),
-                                  // );
+                                  Navigator.push(
+                                    context,
+                                    PageRouteBuilder(
+                                      opaque: false,
+                                      pageBuilder:
+                                          (
+                                            context,
+                                            animation,
+                                            secondaryAnimation,
+                                          ) => ProfileScreen(),
+                                      transitionsBuilder:
+                                          (
+                                            context,
+                                            animation,
+                                            secondaryAnimation,
+                                            child,
+                                          ) {
+                                            const begin = Offset(0.0, 1.0);
+                                            const end = Offset.zero;
+                                            const curve = Curves.easeInOut;
+                                            final tween = Tween(
+                                              begin: begin,
+                                              end: end,
+                                            ).chain(CurveTween(curve: curve));
+                                            return SlideTransition(
+                                              position: animation.drive(tween),
+                                              child: child,
+                                            );
+                                          },
+                                    ),
+                                  );
                                 },
                                 icon: HugeIconsSolid.edit01,
                                 radiusCustom: true,
@@ -339,6 +341,90 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         style: AppTheme.textLabel(context),
                       ),
                       onTap: () {},
+                    ),
+                    Divider(height: 1, color: AppTheme.dividerBg(context)),
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      leading: Icon(HugeIconsStroke.payment01, size: 24),
+                      title: Text(
+                        "Payment Methods",
+                        style: AppTheme.textLabel(context),
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          PageRouteBuilder(
+                            opaque: false,
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    PaymentMethodsSettingsScreen(),
+                            transitionsBuilder:
+                                (
+                                  context,
+                                  animation,
+                                  secondaryAnimation,
+                                  child,
+                                ) {
+                                  const begin = Offset(0.0, 1.0);
+                                  const end = Offset.zero;
+                                  const curve = Curves.easeInOut;
+                                  final tween = Tween(
+                                    begin: begin,
+                                    end: end,
+                                  ).chain(CurveTween(curve: curve));
+                                  return SlideTransition(
+                                    position: animation.drive(tween),
+                                    child: child,
+                                  );
+                                },
+                          ),
+                        );
+                      },
+                    ),
+                    Divider(height: 1, color: AppTheme.dividerBg(context)),
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      leading: Icon(HugeIconsStroke.milkCarton, size: 24),
+                      title: Text(
+                        "Milk Type",
+                        style: AppTheme.textLabel(context),
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          PageRouteBuilder(
+                            opaque: false,
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    MilkTypeSettingsScreen(),
+                            transitionsBuilder:
+                                (
+                                  context,
+                                  animation,
+                                  secondaryAnimation,
+                                  child,
+                                ) {
+                                  const begin = Offset(0.0, 1.0);
+                                  const end = Offset.zero;
+                                  const curve = Curves.easeInOut;
+                                  final tween = Tween(
+                                    begin: begin,
+                                    end: end,
+                                  ).chain(CurveTween(curve: curve));
+                                  return SlideTransition(
+                                    position: animation.drive(tween),
+                                    child: child,
+                                  );
+                                },
+                          ),
+                        );
+                      },
                     ),
                     Divider(height: 1, color: AppTheme.dividerBg(context)),
                     ListTile(

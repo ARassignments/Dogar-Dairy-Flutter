@@ -79,9 +79,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              int crossAxisCount = constraints.maxWidth < 500
-                  ? 1 // small screen → 1 cards per row
-                  : 3; // large screen → 3 cards per row
+              // int crossAxisCount = constraints.maxWidth < 500
+              //     ? 1 // small screen → 1 cards per row
+              //     : 3; // large screen → 3 cards per row
               return Column(
                 children: [
                   // Title
