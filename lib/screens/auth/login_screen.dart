@@ -385,6 +385,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
 
       final User? user = userCredential.user;
+      print(user);
 
       if (user != null) {
         DocumentSnapshot userDoc = await FirebaseFirestore.instance
