@@ -1,3 +1,4 @@
+import 'dart:ui' show PointerDeviceKind;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -41,11 +42,19 @@ class MainApp extends StatelessWidget {
             theme: MyTheme.lightTheme,
             darkTheme: MyTheme.darkTheme,
             themeMode: themeMode, // 👈 controlled by ThemeController
+            scrollBehavior: const MaterialScrollBehavior().copyWith(
+              dragDevices: {
+                PointerDeviceKind.touch,
+                PointerDeviceKind.mouse,
+                PointerDeviceKind.trackpad,
+                PointerDeviceKind.stylus,
+              },
+            ),
             builder: (context, child) {
               // final isDesktop =
               //     _isDesktopOrWeb(context) ||
               //     MediaQuery.of(context).size.width >= 900;
-          
+
               // if (isDesktop) {
               //   // ✅ Desktop/Web — full width, no text scale constraint
               //   return MediaQuery(
@@ -58,7 +67,7 @@ class MainApp extends StatelessWidget {
               //     ),
               //   );
               // }
-          
+
               return MediaQuery(
                 data: MediaQuery.of(context).copyWith(
                   textScaler: const TextScaler.linear(0.8), // 🔥 fixed scale

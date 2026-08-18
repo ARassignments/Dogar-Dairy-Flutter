@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '/screens/dashboard_screen.dart';
+import '/screens/onboarding_screen.dart';
 import '/utils/session_manager.dart';
 import '/theme/theme.dart';
 // For advanced animations
@@ -15,7 +16,7 @@ class SplashScreen extends StatefulWidget {
   });
 
   @override
-  _AnimatedSplashScreenState createState() => _AnimatedSplashScreenState();
+  State<SplashScreen> createState() => _AnimatedSplashScreenState();
 }
 
 class _AnimatedSplashScreenState extends State<SplashScreen>
@@ -55,36 +56,35 @@ class _AnimatedSplashScreenState extends State<SplashScreen>
     final remember = await SessionManager.getRememberMe();
     final userId = await SessionManager.getUserId();
     final user = await SessionManager.getUser();
+    final onboardingCompleted = await SessionManager.isOnboardingCompleted();
 
     if (!mounted) return;
 
     if (remember && userId != null && user != null) {
-      if (MediaQuery.of(context).size.width >= 900) {
-        Navigator.pushReplacement(
-          context,
-          PageRouteBuilder(
-            pageBuilder: (_, __, ___) =>
-                DashboardScreen(),
-            transitionsBuilder: (_, a, __, c) =>
-                FadeTransition(opacity: a, child: c),
-          ),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          PageRouteBuilder(
-            transitionDuration: const Duration(seconds: 1),
-            pageBuilder: (_, __, ___) => DashboardScreen(),
-            transitionsBuilder: (_, a, __, c) =>
-                FadeTransition(opacity: a, child: c),
-          ),
-        );
-      }
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 700),
+          pageBuilder: (_, __, ___) => const DashboardScreen(),
+          transitionsBuilder: (_, a, __, c) =>
+              FadeTransition(opacity: a, child: c),
+        ),
+      );
+    } else if (!onboardingCompleted) {
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 700),
+          pageBuilder: (_, __, ___) => const OnboardingScreen(),
+          transitionsBuilder: (_, a, __, c) =>
+              FadeTransition(opacity: a, child: c),
+        ),
+      );
     } else {
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
-          transitionDuration: const Duration(seconds: 1),
+          transitionDuration: const Duration(milliseconds: 700),
           pageBuilder: (_, __, ___) => widget.nextScreen,
           transitionsBuilder: (_, a, __, c) =>
               FadeTransition(opacity: a, child: c),

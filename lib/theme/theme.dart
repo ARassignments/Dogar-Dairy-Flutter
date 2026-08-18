@@ -37,6 +37,7 @@ class AppColor {
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
   static const Color transparent = Color(0xff00ffffff);
+  static const Color primaryColor = primary_50;
 
   // Primary Colors
   static const Color primary_5 = Color(0xFFF3F1FE);
@@ -261,7 +262,7 @@ class AppTheme {
         ? 'assets/images/logo_dark.png'
         : 'assets/images/logo.png';
   }
-  
+
   static String appLogoLauncher(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark
         ? 'assets/images/logo_launcher_dark.png'
@@ -279,7 +280,7 @@ class AppTheme {
         ? 'assets/images/milk_type/cow-milk-dark.png'
         : 'assets/images/milk_type/cow-milk.png';
   }
-  
+
   static String goatMilkIcon(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark
         ? 'assets/images/milk_type/goat-milk-dark.png'
@@ -324,7 +325,7 @@ class AppTheme {
   static Color onBoardingDot(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
       ? AppColor.white.withOpacity(0.5)
-      : AppColor.black.withOpacity(0.5);
+      : AppColor.black.withOpacity(0.1);
 
   static Color onBoardingDotActive(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark

@@ -11,6 +11,19 @@ class SessionManager {
 
   static const String _avatarKey = "USER_AVATAR";
   static const String _genderKey = "USER_GENDER";
+  static const String _onboardingCompletedKey = "ONBOARDING_COMPLETED";
+
+  /// Set onboarding completed flag
+  static Future<void> setOnboardingCompleted(bool completed) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_onboardingCompletedKey, completed);
+  }
+
+  /// Get onboarding completed flag
+  static Future<bool> isOnboardingCompleted() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_onboardingCompletedKey) ?? false;
+  }
 
   /// Save user session
   static Future<void> saveUserSession(

@@ -13,7 +13,20 @@
           "package_name": "com.example.dogardairy"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "989609807796-i8rvld2qnvcpff3n070t0k116nab1q1m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.dogardairy",
+            "certificate_hash": "61c51da167e7e56037b116a1a5242bd300c300fb"
+          }
+        },
+        {
+          "client_id": "989609807796-33tolfbcena061k9ltqopktnjtirjc0r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDno8__YEb6YQvtAiUvVHeayUD-ql_PFFA"
@@ -21,7 +34,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "989609807796-33tolfbcena061k9ltqopktnjtirjc0r.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "989609807796-s9amlis9jatdhntmvovlfub3jlhitisi.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.dogardairy"
+              }
+            }
+          ]
         }
       }
     }
