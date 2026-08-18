@@ -5,6 +5,7 @@ class UserModel {
   final String phone;
   final String address;
   final String profileImage;
+  final String role;
 
   UserModel({
     required this.uid,
@@ -13,6 +14,7 @@ class UserModel {
     required this.phone,
     required this.address,
     required this.profileImage,
+    this.role = 'user',
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map, String uid) {
@@ -23,6 +25,7 @@ class UserModel {
       phone: map['phone'] ?? '',
       address: map['address'] ?? '',
       profileImage: map['profile_image_url'] ?? '',
+      role: map['role'] ?? 'user',
     );
   }
 
@@ -33,6 +36,7 @@ class UserModel {
       'phone': phone,
       'address': address,
       'profile_image_url': profileImage,
+      'role': role,
     };
   }
 
@@ -42,6 +46,7 @@ class UserModel {
     String? phone,
     String? address,
     String? profileImage,
+    String? role,
   }) {
     return UserModel(
       uid: uid,
@@ -50,6 +55,7 @@ class UserModel {
       phone: phone ?? this.phone,
       address: address ?? this.address,
       profileImage: profileImage ?? this.profileImage,
+      role: role ?? this.role,
     );
   }
 }

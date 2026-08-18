@@ -325,7 +325,7 @@ class AppTheme {
   static Color onBoardingDot(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
       ? AppColor.white.withOpacity(0.5)
-      : AppColor.black.withOpacity(0.1);
+      : AppColor.black.withOpacity(0.5);
 
   static Color onBoardingDotActive(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark

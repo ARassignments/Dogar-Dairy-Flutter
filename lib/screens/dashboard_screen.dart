@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:hugeicons_pro/hugeicons.dart';
 import '/components/appsnackbar.dart';
+import '/components/dashboard_metric_cards.dart';
 import '/components/dashboard_slider.dart';
 import '/components/dialog_logout.dart';
 import '/components/menu_drawer.dart';
@@ -65,6 +66,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _homePage() {
+    // final role = user?['role']?.toString() ?? 'user';
+    final role = 'customer';
     return SafeArea(
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
@@ -72,7 +75,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             DashboardSlider(),
-            SizedBox(height: 16),
+            const SizedBox(height: 8),
+            DashboardMetricCards(role: role),
+            const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Text(

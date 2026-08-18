@@ -1,0 +1,13 @@
+[build]
+  # Clone Flutter SDK (stable channel), then build the web release
+  command = "git clone https://github.com/flutter/flutter.git -b stable --depth 1 && export PATH=\"$PATH:$PWD/flutter/bin\" && flutter doctor && flutter pub get && flutter build web --release"
+  publish = "build/web"
+
+[build.environment]
+  FLUTTER_WEB = "true"
+
+# Ensure client-side routes (e.g. go_router, Navigator 2.0) fall back to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
