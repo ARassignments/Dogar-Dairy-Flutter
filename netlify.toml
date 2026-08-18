@@ -1,3 +1,10 @@
 [build]
   command = "flutter build web"
   publish = "build/web"
+
+# This redirect ensures that all routes fall back to index.html, allowing
+# Flutter's client-side router (e.g., Navigator, go_router) to handle the URL.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
