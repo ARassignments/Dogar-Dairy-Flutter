@@ -1,10 +1,8 @@
 [build]
-  # netlify-plugin-flutter already installs the Flutter SDK and puts it on PATH,
-  # so the build command just needs to fetch packages and build.
-  command = "flutter pub get && flutter build web --release"
+  command = "flutter build web --release"
   publish = "build/web"
-
-# Ensure client-side routes (e.g. go_router, Navigator 2.0) fall back to index.html
+  
+  # Netlify redirect rule for Flutter web applications (handles client-side routing)
 [[redirects]]
   from = "/*"
   to = "/index.html"
