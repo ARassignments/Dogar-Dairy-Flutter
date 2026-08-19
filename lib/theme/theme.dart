@@ -36,7 +36,7 @@ class AppColor {
   // Basic Colors
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
-  static const Color transparent = Color(0xff00ffffff);
+  static const Color transparent = Color(0x00000000);
   static const Color primaryColor = primary_50;
 
   // Primary Colors
@@ -324,8 +324,8 @@ class AppTheme {
 
   static Color onBoardingDot(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-      ? AppColor.white.withOpacity(0.5)
-      : AppColor.black.withOpacity(0.5);
+      ? AppColor.white.withValues(alpha: 0.5)
+      : AppColor.black.withValues(alpha: 0.5);
 
   static Color onBoardingDotActive(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
@@ -344,7 +344,7 @@ class AppTheme {
 
   static Color cardBg(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark
-      ? AppColor.neutral_90.withOpacity(0.4)
+      ? AppColor.neutral_90.withValues(alpha: 0.4)
       : AppColor.neutral_5;
 
   static Color cardDarkBg(BuildContext context) =>
@@ -449,8 +449,8 @@ class AppTheme {
       boxShadow: [
         BoxShadow(
           color: Theme.of(context).brightness == Brightness.dark
-              ? AppColor.neutral_80.withOpacity(0.2)
-              : AppColor.neutral_20.withOpacity(0.2),
+              ? AppColor.neutral_80.withValues(alpha: 0.2)
+              : AppColor.neutral_20.withValues(alpha: 0.2),
           blurRadius: 10,
           offset: const Offset(0, 4),
         ),
@@ -504,8 +504,8 @@ class FlatButton extends StatelessWidget {
                 : BorderRadius.circular(8),
           ),
           overlayColor: isDark
-              ? AppColor.black.withOpacity(0.2)
-              : AppColor.white.withOpacity(0.2),
+              ? AppColor.black.withValues(alpha: 0.2)
+              : AppColor.white.withValues(alpha: 0.2),
         ),
         child: loading
             ? const SizedBox(
@@ -613,8 +613,8 @@ class OutlineButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           overlayColor: isDark
-              ? AppColor.white.withOpacity(0.2)
-              : AppColor.black.withOpacity(0.2),
+              ? AppColor.white.withValues(alpha: 0.2)
+              : AppColor.black.withValues(alpha: 0.2),
         ),
         child: icon != null
             ? Row(
@@ -668,8 +668,8 @@ class GhostButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           overlayColor: isDark
-              ? AppColor.white.withOpacity(0.2)
-              : AppColor.black.withOpacity(0.2),
+              ? AppColor.white.withValues(alpha: 0.2)
+              : AppColor.black.withValues(alpha: 0.2),
         ),
         child: icon != null
             ? Row(
@@ -728,8 +728,8 @@ class OutlineErrorButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           overlayColor: isDark
-              ? AppColor.accent_50.withOpacity(0.2)
-              : AppColor.accent_50.withOpacity(0.2),
+              ? AppColor.accent_50.withValues(alpha: 0.2)
+              : AppColor.accent_50.withValues(alpha: 0.2),
         ),
         child: icon != null
             ? Row(
@@ -789,7 +789,7 @@ class CustomButton extends StatelessWidget {
           textStyle: AppFontFamily.medium_16,
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          overlayColor: color.withOpacity(0.2),
+          overlayColor: color.withValues(alpha: 0.2),
         ),
         child: loading
             ? const SizedBox(
@@ -928,7 +928,7 @@ class AppInputDecoration {
               borderRadius: BorderRadius.circular(4),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 2,
                   offset: const Offset(0, 1),
                 ),

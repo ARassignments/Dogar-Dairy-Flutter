@@ -1,5 +1,5 @@
-class fSizes {
-  fSizes._();
+class FSizes {
+  FSizes._();
 
   //Padding And Margin Sizes
   static const double xs = 4.0;

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 class WhatsAppHelper {
@@ -10,7 +11,7 @@ class WhatsAppHelper {
         "phone": phone,
       });
     } catch (e) {
-      print("Error sending Image: $e");
+      debugPrint("Error sending Image: $e");
     }
   }
   static Future<void> sendPdfToWhatsApp(String filePath, String contact) async {
@@ -20,7 +21,7 @@ class WhatsAppHelper {
         "contact": contact,
       });
     } catch (e) {
-      print("Error sending PDF: $e");
+      debugPrint("Error sending PDF: $e");
     }
   }
 }

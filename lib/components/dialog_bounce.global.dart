@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class BounceDialog extends StatefulWidget {
   final Widget child;
-  const BounceDialog({required this.child});
+  const BounceDialog({super.key, required this.child});
 
   static Future<T?> showBounceDialog<T>({
     required BuildContext context,

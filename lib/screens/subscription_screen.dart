@@ -48,7 +48,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
   @override
   void dispose() {
-    for (final c in _controllers) c.dispose();
+    for (final c in _controllers) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -172,7 +174,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
         Text(
           'Choose the plan that grows with your business',
           style: TextStyle(
-            color: AppTheme.iconColor(context).withOpacity(0.45),
+            color: AppTheme.iconColor(context).withValues(alpha: 0.45),
             fontSize: 13,
             letterSpacing: 0.3,
           ),
@@ -280,7 +282,7 @@ class _Dividerline extends StatelessWidget {
       gradient: LinearGradient(
         colors: [
           Colors.transparent,
-          AppTheme.iconColor(context).withOpacity(0.4),
+          AppTheme.iconColor(context).withValues(alpha: 0.4),
         ],
       ),
     ),
@@ -357,8 +359,8 @@ class _PricingCardState extends State<_PricingCard>
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            Colors.white.withOpacity(0.18),
-                            Colors.white.withOpacity(0.05),
+                            Colors.white.withValues(alpha: 0.18),
+                            Colors.white.withValues(alpha: 0.05),
                           ],
                         ),
                       ),
@@ -375,10 +377,10 @@ class _PricingCardState extends State<_PricingCard>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: widget.isSelected
-                            ? Colors.white.withOpacity(0.07)
+                            ? Colors.white.withValues(alpha: 0.07)
                             : Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white.withOpacity(0.07)
-                            : AppColor.primary_50.withOpacity(0.07),
+                            ? Colors.white.withValues(alpha: 0.07)
+                            : AppColor.primary_50.withValues(alpha: 0.07),
                       ),
                     ),
                   ),
@@ -391,10 +393,10 @@ class _PricingCardState extends State<_PricingCard>
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: widget.isSelected
-                            ? Colors.white.withOpacity(0.05)
+                            ? Colors.white.withValues(alpha: 0.05)
                             : Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white.withOpacity(0.05)
-                            : AppColor.primary_50.withOpacity(0.05),
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : AppColor.primary_50.withValues(alpha: 0.05),
                       ),
                     ),
                   ),
@@ -431,23 +433,23 @@ class _PricingCardState extends State<_PricingCard>
                                 ),
                                 decoration: BoxDecoration(
                                   color: widget.isSelected
-                                      ? Colors.white.withOpacity(0.25)
+                                      ? Colors.white.withValues(alpha: 0.25)
                                       : Theme.of(context).brightness ==
                                             Brightness.dark
-                                      ? Colors.white.withOpacity(0.25)
+                                      ? Colors.white.withValues(alpha: 0.25)
                                       : AppTheme.iconColor(
                                           context,
-                                        ).withOpacity(0.05),
+                                        ).withValues(alpha: 0.05),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
                                     color: widget.isSelected
-                                        ? Colors.white.withOpacity(0.4)
+                                        ? Colors.white.withValues(alpha: 0.4)
                                         : Theme.of(context).brightness ==
                                               Brightness.dark
-                                        ? Colors.white.withOpacity(0.4)
+                                        ? Colors.white.withValues(alpha: 0.4)
                                         : AppTheme.iconColorThree(
                                             context,
-                                          ).withOpacity(0.4),
+                                          ).withValues(alpha: 0.4),
                                     width: 0.5,
                                   ),
                                 ),
@@ -490,11 +492,11 @@ class _PricingCardState extends State<_PricingCard>
                           plan.period,
                           style: TextStyle(
                             color: widget.isSelected
-                                ? Colors.white.withOpacity(0.6)
+                                ? Colors.white.withValues(alpha: 0.6)
                                 : Theme.of(context).brightness ==
                                       Brightness.dark
-                                ? Colors.white.withOpacity(0.6)
-                                : AppTheme.iconColor(context).withOpacity(0.6),
+                                ? Colors.white.withValues(alpha: 0.6)
+                                : AppTheme.iconColor(context).withValues(alpha: 0.6),
                             fontSize: 13,
                             fontWeight: FontWeight.w400,
                           ),
@@ -509,13 +511,13 @@ class _PricingCardState extends State<_PricingCard>
                             gradient: LinearGradient(
                               colors: [
                                 widget.isSelected
-                                    ? Colors.white.withOpacity(0.3)
+                                    ? Colors.white.withValues(alpha: 0.3)
                                     : Theme.of(context).brightness ==
                                           Brightness.dark
-                                    ? Colors.white.withOpacity(0.3)
+                                    ? Colors.white.withValues(alpha: 0.3)
                                     : AppTheme.iconColor(
                                         context,
-                                      ).withOpacity(0.02),
+                                      ).withValues(alpha: 0.02),
                                 widget.isSelected
                                     ? Colors.transparent
                                     : Theme.of(context).brightness ==
@@ -617,9 +619,9 @@ class _FeatureRow extends StatelessWidget {
             height: 20,
             decoration: BoxDecoration(
               color: isSelected
-                  ? iconColor.withOpacity(0.20)
+                  ? iconColor.withValues(alpha: 0.20)
                   : Theme.of(context).brightness == Brightness.dark
-                  ? iconColor.withOpacity(0.20)
+                  ? iconColor.withValues(alpha: 0.20)
                   : AppColor.primary_50,
               shape: BoxShape.circle,
             ),
@@ -639,9 +641,9 @@ class _FeatureRow extends StatelessWidget {
               feature.text,
               style: TextStyle(
                 color: isSelected
-                    ? Colors.white.withOpacity(0.90)
+                    ? Colors.white.withValues(alpha: 0.90)
                     : Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white.withOpacity(0.90)
+                    ? Colors.white.withValues(alpha: 0.90)
                     : AppTheme.iconColor(context),
                 fontSize: 13,
                 fontWeight: FontWeight.w400,
@@ -711,7 +713,7 @@ class _CTAButtonState extends State<_CTAButton> {
       onTapCancel: () => setState(() => _pressed = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        transform: Matrix4.identity()..scale(_pressed ? 0.97 : 1.0),
+        transform: Matrix4.diagonal3Values(_pressed ? 0.97 : 1.0, _pressed ? 0.97 : 1.0, 1.0),
         transformAlignment: Alignment.center,
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14),
@@ -719,11 +721,11 @@ class _CTAButtonState extends State<_CTAButton> {
           color: widget.isSelected
               ? Colors.white
               : Theme.of(context).brightness == Brightness.dark
-              ? Colors.white.withOpacity(0.20)
+              ? Colors.white.withValues(alpha: 0.20)
               : AppColor.primary_50,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: Colors.white.withOpacity(widget.isSelected ? 0 : 0.35),
+            color: Colors.white.withValues(alpha: widget.isSelected ? 0 : 0.35),
             width: Theme.of(context).brightness == Brightness.dark ? 1 : 0,
           ),
         ),

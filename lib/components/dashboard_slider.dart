@@ -78,7 +78,6 @@ class _DashboardSliderState extends State<DashboardSlider> {
 
   /// 🟢 Actual Carousel
   Widget _buildImageCarousel(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
     return CarouselSlider.builder(
       carouselController: _carouselController,
       itemCount: sliderImages.length,

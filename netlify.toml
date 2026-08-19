@@ -1,5 +1,5 @@
 [build]
-  command = "flutter build web --release --no-wasm-dry-run"
+  command = "flutter build web --release"
   publish = "build/web"
 
 # This redirect ensures that all routes fall back to index.html, allowing

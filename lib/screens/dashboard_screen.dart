@@ -29,7 +29,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isLoadingUser = true;
 
   int _currentIndex = 0;
-  bool _showSearchBar = false;
+  final bool _showSearchBar = false;
   final ZoomDrawerController _drawerController = ZoomDrawerController();
   List<String> menus = ["Home", "Orders", "Ledgers", "Accounts"];
 
@@ -481,7 +481,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       trailing: Switch(
                         value: Theme.of(context).brightness == Brightness.dark,
-                        activeColor: AppTheme.iconColor(context),
+                        activeThumbColor: AppTheme.iconColor(context),
                         onChanged: (value) {
                           ThemeController.setTheme(
                             value ? ThemeMode.dark : ThemeMode.light,
@@ -588,6 +588,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 .externalApplication, // opens in browser
                           );
                         } else {
+                          if (!mounted) return;
                           AppSnackBar.show(
                             context,
                             message: "Could not open the website.",
@@ -651,7 +652,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final pages = _pages();
     Widget child = Scaffold(
       body: ZoomDrawer(
         controller: _drawerController,
@@ -835,8 +835,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         showShadow: true,
         angle: -8.0,
         mainScreenScale: 0.05, // slightly more zoom-in effect
-        shadowLayer1Color: AppTheme.customListBg(context).withOpacity(0.5),
-        shadowLayer2Color: AppTheme.customListBg(context).withOpacity(1.0),
+        shadowLayer1Color: AppTheme.customListBg(context).withValues(alpha: 0.5),
+        shadowLayer2Color: AppTheme.customListBg(context).withValues(alpha: 1.0),
         mainScreenTapClose: true,
         // overlayBlur: 0.8,
         slideWidth: MediaQuery.of(context).size.width * 0.85,
@@ -855,7 +855,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           );
         } else {
-          return child!;
+          return child;
         }
       },
     );

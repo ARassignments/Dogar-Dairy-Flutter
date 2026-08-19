@@ -6,18 +6,15 @@ import 'package:dogardairy/services/api_service.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hugeicons_pro/hugeicons.dart';
 import 'package:step_progress/step_progress.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '/theme/theme.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
 
   @override
-  _SignupScreenState createState() => _SignupScreenState();
+  State<SignupScreen> createState() => _SignupScreenState();
 }
 
 class _SignupScreenState extends State<SignupScreen> {
@@ -40,11 +37,9 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureCPassword = true;
-  bool get _isFormDisabled => _isLoading || !_isFormValid;
   CountryCode _selectedCountryCode = CountryCode.fromCountryCode('PK');
 
   int _currentStep = 0; // 0 = personal info, 1 = location
-  int _previousStep = 0;
   bool _isForward = true;
   CountryModel? _selectedCountry;
   StateModel? _selectedState;
@@ -90,7 +85,6 @@ class _SignupScreenState extends State<SignupScreen> {
   void _goToStep(int newStep) {
     setState(() {
       _isForward = newStep > _currentStep;
-      _previousStep = _currentStep;
       _currentStep = newStep;
     });
   }
@@ -108,7 +102,7 @@ class _SignupScreenState extends State<SignupScreen> {
         });
       }
     } catch (e) {
-      print("fetch countries error: $e");
+      debugPrint("fetch countries error: $e");
       setState(() => _isLoadingCountries = false);
     }
   }
@@ -128,7 +122,7 @@ class _SignupScreenState extends State<SignupScreen> {
         });
       }
     } catch (e) {
-      print("fetch states error: $e");
+      debugPrint("fetch states error: $e");
       setState(() => _isLoadingStates = false);
     }
   }
@@ -148,7 +142,7 @@ class _SignupScreenState extends State<SignupScreen> {
         });
       }
     } catch (e) {
-      print("fetch cities error: $e");
+      debugPrint("fetch cities error: $e");
       setState(() => _isLoadingCities = false);
     }
   }
@@ -332,7 +326,7 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
           );
         } else {
-          return child!;
+          return child;
         }
       },
     );
@@ -906,7 +900,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 useSafeArea: true,
                 scrollbarTheme: ScrollbarThemeData(
                   radius: const Radius.circular(40),
-                  thickness: MaterialStateProperty.all(5),
+                  thickness: WidgetStateProperty.all(5),
                 ),
               ),
 
@@ -1071,7 +1065,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 useSafeArea: true,
                 scrollbarTheme: ScrollbarThemeData(
                   radius: const Radius.circular(40),
-                  thickness: MaterialStateProperty.all(5),
+                  thickness: WidgetStateProperty.all(5),
                 ),
               ),
 
@@ -1228,7 +1222,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 useSafeArea: true,
                 scrollbarTheme: ScrollbarThemeData(
                   radius: const Radius.circular(40),
-                  thickness: MaterialStateProperty.all(5),
+                  thickness: WidgetStateProperty.all(5),
                 ),
               ),
 
@@ -1337,6 +1331,7 @@ class _SignupScreenState extends State<SignupScreen> {
       };
 
       // Call your API here
+      debugPrint('Registration Form Data: $formData');
       await Future.delayed(const Duration(seconds: 1));
 
       if (mounted) {

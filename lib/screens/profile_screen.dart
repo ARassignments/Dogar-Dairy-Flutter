@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons_pro/hugeicons.dart';
-import 'package:intl/intl.dart';
 import '/components/loading_screen.dart';
 import '/utils/session_manager.dart';
 import '/theme/theme.dart';
@@ -36,17 +35,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  String _formatDate(String dateString) {
-    try {
-      final inputFormat = DateFormat("dd/MMM/yyyy");
-      final dateTime = inputFormat.parse(dateString);
-      final outputFormat = DateFormat("MMMM dd, yyyy");
-      return outputFormat.format(dateTime);
-    } catch (e) {
-      return dateString;
-    }
-  }
-
   String formatInternationalPhone(String number) {
     if (number.startsWith("0")) {
       return "+92 ${number.substring(1, 4)} ${number.substring(4, 7)} ${number.substring(7)}";
@@ -54,34 +42,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return number;
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case "pending":
-        return Colors.orange;
-      case "paid":
-        return Colors.green;
-      case "inprogress":
-        return Colors.blue;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  IconData _getStatusIcon(String status) {
-    switch (status.toLowerCase()) {
-      case "pending":
-        return HugeIconsSolid.clock01;
-      case "paid":
-        return HugeIconsSolid.checkmarkCircle01;
-      case "inprogress":
-        return HugeIconsSolid.loading02;
-      default:
-        return Icons.info;
-    }
-  }
-
   Future<void> _showAvatarBottomSheet(BuildContext context) async {
     final savedData = await SessionManager.getAvatarAndGender();
+    if (!context.mounted) return;
     String selectedGender = savedData["gender"] ?? "male";
     String? selectedAvatar = savedData["avatar"];
     final maleAvatars = [
@@ -228,11 +191,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 selectedGender,
                                 avatar,
                               );
-                              setState(() {
-                                localAvatar = avatar;
-                                localGender = selectedGender;
-                              });
-                              Navigator.pop(context);
+                              if (mounted) {
+                                setState(() {
+                                  localAvatar = avatar;
+                                  localGender = selectedGender;
+                                });
+                              }
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                              }
                             },
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(12),
@@ -241,7 +208,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   Image.asset(avatar, fit: BoxFit.cover),
                                   if (isSelected)
                                     Container(
-                                      color: Colors.blue.withOpacity(0.5),
+                                      color: Colors.blue.withValues(alpha: 0.5),
                                       child: const Center(
                                         child: Icon(
                                           HugeIconsSolid.checkmarkBadge02,

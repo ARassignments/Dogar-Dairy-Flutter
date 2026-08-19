@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -26,7 +27,7 @@ class UserNotifier extends StateNotifier<UserModel?> {
         state = UserModel.fromMap(data, uid);
       }
     } catch (e) {
-      print("Error fetching user: $e");
+      debugPrint("Error fetching user: $e");
     }
   }
 
@@ -49,7 +50,7 @@ class UserNotifier extends StateNotifier<UserModel?> {
         profileImage: updates['profile_image_url'],
       );
     } catch (e) {
-      print("Error updating user: $e");
+      debugPrint("Error updating user: $e");
     }
   }
 }

@@ -24,7 +24,7 @@ class MyColors {
   static const Color primaryBackground = Color(0xFFF3F5FF);
   //Background Container Colors
   static const Color lightContainer = Color(0xFFF6F6F6);
-  static Color darkContainer = MyColors.white.withOpacity(0.1);
+  static Color darkContainer = MyColors.white.withValues(alpha: 0.1);
   //Button Colors
   static const Color buttonPrimary = primary;
   static const Color buttonSecondary = Color(0xFF6c757D);
