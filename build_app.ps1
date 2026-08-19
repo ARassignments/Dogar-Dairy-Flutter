@@ -23,7 +23,8 @@ if (Test-Path $apkSource) {
     Copy-Item $apkSource "web\downloads\dogar-dairy.apk" -Force
     $apkSize = (Get-Item "web\downloads\dogar-dairy.apk").Length / 1MB
     Write-Host ("Copied successfully! APK size: {0:N2} MB" -f $apkSize) -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "Warning: $apkSource not found!" -ForegroundColor Red
 }
 
