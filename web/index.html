@@ -130,16 +130,35 @@
       background: #4838D1;
       color: #FFFFFF;
       border: none;
-      padding: 9px 16px;
+      padding: 9px 15px;
       border-radius: 10px;
       font-weight: 600;
       font-size: 13px;
       cursor: pointer;
       white-space: nowrap;
-      transition: background 0.2s;
+      transition: all 0.2s ease;
     }
     #pwa-install-banner .pwa-btn-install:hover {
       background: #3528B3;
+    }
+    #pwa-install-banner .pwa-btn-apk {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #F3F1FE;
+      color: #4838D1;
+      border: 1px solid #DDD7FC;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 13px;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    #pwa-install-banner .pwa-btn-apk:hover {
+      background: #DDD7FC;
+      color: #3528B3;
     }
     #pwa-install-banner .pwa-btn-close {
       background: transparent;
@@ -152,17 +171,21 @@
     }
   </style>
 
-  <!-- PWA Install Prompt Banner -->
+  <!-- PWA & APK Install Prompt Banner -->
   <div id="pwa-install-banner">
     <div class="pwa-left">
       <img src="icons/Icon-192.png" alt="Dogar Dairy">
       <div class="pwa-text">
         <span class="pwa-title">Dogar Dairy</span>
-        <span class="pwa-sub">Install app for fast access</span>
+        <span class="pwa-sub">Install app or download APK</span>
       </div>
     </div>
     <div class="pwa-actions">
       <button class="pwa-btn-install" id="pwa-install-btn">Install</button>
+      <a class="pwa-btn-apk" id="pwa-apk-btn" href="downloads/dogar-dairy.apk" download="dogar-dairy.apk" title="Download Android APK">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+        APK
+      </a>
       <button class="pwa-btn-close" id="pwa-close-btn" aria-label="Close">&times;</button>
     </div>
   </div>
@@ -172,17 +195,25 @@
     const banner = document.getElementById('pwa-install-banner');
     const installBtn = document.getElementById('pwa-install-btn');
     const closeBtn = document.getElementById('pwa-close-btn');
+    const isAndroid = /android/i.test(navigator.userAgent || '');
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-      // Prevent the mini-infobar from appearing on mobile
-      e.preventDefault();
-      deferredPrompt = e;
-      window.isPWAInstallable = true;
-
-      // Show custom install prompt banner if not dismissed in session
+    // Show banner on Android or when PWA is installable
+    function showBanner() {
       if (!sessionStorage.getItem('pwa_dismissed')) {
         banner.style.display = 'flex';
       }
+    }
+
+    if (isAndroid) {
+      showBanner();
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent standard browser mini-infobar
+      e.preventDefault();
+      deferredPrompt = e;
+      window.isPWAInstallable = true;
+      showBanner();
     });
 
     installBtn.addEventListener('click', async () => {
@@ -192,6 +223,9 @@
         const { outcome } = await deferredPrompt.userChoice;
         console.log(`PWA install outcome: ${outcome}`);
         deferredPrompt = null;
+      } else {
+        // Fallback instructions if native prompt isn't supported
+        alert("To install Dogar Dairy on Android:\n1. Tap the 3 dots (menu) at top-right.\n2. Tap 'Install app' or 'Add to Home screen'.\n\nOr click the 'APK' button to download the APK directly.");
       }
     });
 
