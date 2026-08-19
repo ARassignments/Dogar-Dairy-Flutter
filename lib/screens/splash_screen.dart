@@ -111,11 +111,11 @@ class _AnimatedSplashScreenState extends State<SplashScreen>
               scale: _scaleAnimation,
               child: FadeTransition(
                 opacity: _fadeAnimation,
-                child: Image.asset(
+                child:Hero(tag: 'logo', child: Image.asset(
                   AppTheme.appLogo(context),
                   width: 160,
                   height: 160,
-                ),
+                )),
               ),
             ),
 

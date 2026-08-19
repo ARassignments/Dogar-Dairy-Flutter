@@ -239,12 +239,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Image.asset(
-              AppTheme.appLogo(context),
-              height: 100,
-              width: 100,
-              errorBuilder: (_, __, ___) =>
-                  const Icon(Icons.lock_reset_rounded, size: 80),
+            Hero(
+              tag: 'logo',
+              child: Image.asset(
+                AppTheme.appLogo(context),
+                height: 100,
+                width: 100,
+                errorBuilder: (_, __, ___) =>
+                    const Icon(Icons.lock_reset_rounded, size: 80),
+              ),
             ),
             const SizedBox(height: 32),
             Text("Forgot Password", style: AppTheme.textTitle(context)),

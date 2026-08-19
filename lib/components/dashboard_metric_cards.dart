@@ -27,7 +27,7 @@ class DashboardMetricItem {
   });
 }
 
-class DashboardMetricCards extends StatelessWidget {
+class DashboardMetricCards extends StatefulWidget {
   final String role;
   final ValueChanged<String>? onRoleChanged;
   final bool showRoleSelector;
@@ -38,6 +38,39 @@ class DashboardMetricCards extends StatelessWidget {
     this.onRoleChanged,
     this.showRoleSelector = false,
   });
+
+  @override
+  State<DashboardMetricCards> createState() => _DashboardMetricCardsState();
+}
+
+class _DashboardMetricCardsState extends State<DashboardMetricCards>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+    _animController.forward();
+  }
+
+  @override
+  void didUpdateWidget(covariant DashboardMetricCards oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.role != widget.role) {
+      _animController.reset();
+      _animController.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
 
   String _normalizeRole(String rawRole) {
     final r = rawRole.toLowerCase().trim();
@@ -240,7 +273,7 @@ class DashboardMetricCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final normalizedRole = _normalizeRole(role);
+    final normalizedRole = _normalizeRole(widget.role);
     final items = _getMetricsForRole(context, normalizedRole);
 
     return Column(
@@ -309,7 +342,7 @@ class DashboardMetricCards extends StatelessWidget {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final crossAxisCount = constraints.maxWidth > 400 ? 2 : 2;
-              final childAspectRatio = constraints.maxWidth > 360 ? 1.28 : 1.15;
+              final childAspectRatio = constraints.maxWidth > 350 ? 1.48 : 1.15;
 
               return GridView.builder(
                 shrinkWrap: true,
@@ -323,7 +356,33 @@ class DashboardMetricCards extends StatelessWidget {
                 ),
                 itemBuilder: (context, index) {
                   final item = items[index];
-                  return _buildCard(context, item, isDark);
+                  final count = items.length;
+                  final step = count > 1 ? 0.5 / (count - 1) : 0.0;
+                  final start = (index * step).clamp(0.0, 0.6);
+                  final end = (start + 0.4).clamp(0.0, 1.0);
+
+                  final curvedAnim = CurvedAnimation(
+                    parent: _animController,
+                    curve: Interval(start, end, curve: Curves.easeOutCubic),
+                  );
+
+                  final fadeAnim = Tween<double>(
+                    begin: 0.0,
+                    end: 1.0,
+                  ).animate(curvedAnim);
+
+                  final slideAnim = Tween<Offset>(
+                    begin: const Offset(0.0, 0.25),
+                    end: Offset.zero,
+                  ).animate(curvedAnim);
+
+                  return FadeTransition(
+                    opacity: fadeAnim,
+                    child: SlideTransition(
+                      position: slideAnim,
+                      child: _buildCard(context, item, isDark),
+                    ),
+                  );
                 },
               );
             },
@@ -371,19 +430,17 @@ class DashboardMetricCards extends StatelessWidget {
               // Top Row: Icon Container + Badge Pill
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: item.iconBgColor ??
+                      color:
+                          item.iconBgColor ??
                           item.iconColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(
-                      item.icon,
-                      size: 20,
-                      color: item.iconColor,
-                    ),
+                    child: Icon(item.icon, size: 40, color: item.iconColor),
                   ),
                   if (item.badgeText != null)
                     Flexible(
@@ -407,11 +464,11 @@ class DashboardMetricCards extends StatelessWidget {
                             fontFamily: AppFontFamily.poppinsSemiBold,
                             color: item.isBadgePositive
                                 ? (isDark
-                                    ? const Color(0xFF81C784)
-                                    : const Color(0xFF2E7D32))
+                                      ? const Color(0xFF81C784)
+                                      : const Color(0xFF2E7D32))
                                 : (isDark
-                                    ? const Color(0xFFFFB74D)
-                                    : const Color(0xFFE65100)),
+                                      ? const Color(0xFFFFB74D)
+                                      : const Color(0xFFE65100)),
                           ),
                         ),
                       ),

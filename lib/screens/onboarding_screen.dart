@@ -238,9 +238,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 width: 50,
                 height: 50,
                 padding: const EdgeInsets.all(6),
-                child: Image.asset(
-                  AppTheme.appLogoLauncher(context),
-                  fit: BoxFit.fitWidth,
+                child: Hero(
+                  tag: 'logo',
+                  child: Image.asset(
+                    AppTheme.appLogoLauncher(context),
+                    fit: BoxFit.fitWidth,
+                  ),
                 ),
               ),
               const SizedBox(width: 5),
@@ -1378,11 +1381,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   /// Circular Progress Next Button for Pages 0..2 with smoothly animated progress value
   Widget _buildCircularNextButton(Color primaryColor, bool isDark) {
-    return GestureDetector(
+    return InkWell(
       onTap: _nextPage,
       child: SizedBox(
         width: 62,
-        height: 60,
+        height: 62,
         child: Stack(
           alignment: Alignment.center,
           children: [
