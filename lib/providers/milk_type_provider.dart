@@ -1,7 +1,7 @@
 import 'package:dogardairy/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '/Models/payment_dropdown_model.dart';
+import 'package:dogardairy/models/payment_dropdown_model.dart';
 import 'package:hugeicons_pro/hugeicons.dart';
 
 class MilkTypeNotifier extends StateNotifier<List<PaymentDropdownModel>> {
