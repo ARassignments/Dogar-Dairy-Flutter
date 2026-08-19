@@ -593,6 +593,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           "User doc missing in Firestore. Creating default profile...",
         );
         userData = {
+          'uid': user.uid,
           'name': user.displayName ?? input.split('@').first,
           'email': user.email ?? loginEmail,
           'contact': user.phoneNumber ?? '',
@@ -606,6 +607,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         await _firestore.collection('Users').doc(user.uid).set(userData);
       } else {
         userData = userDoc.data() as Map<String, dynamic>;
+        userData['uid'] ??= user.uid;
       }
 
       // 4. Check if account is active
@@ -739,6 +741,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         await userRef.set(userData, SetOptions(merge: true));
       } else {
         userData = userDoc.data() as Map<String, dynamic>;
+        userData['uid'] ??= user.uid;
       }
 
       // Check if account is active

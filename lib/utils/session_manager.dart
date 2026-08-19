@@ -25,22 +25,72 @@ class SessionManager {
     return prefs.getBool(_onboardingCompletedKey) ?? false;
   }
 
+  /// Converts non-JSON-encodable objects (like Cloud Firestore Timestamp, FieldValue, DateTime, etc.) to encodable primitives.
+  static dynamic _toEncodable(dynamic nonEncodable) {
+    if (nonEncodable == null) return null;
+    if (nonEncodable is DateTime) {
+      return nonEncodable.toIso8601String();
+    }
+    // Handle Cloud Firestore Timestamp or any object having toDate()
+    try {
+      final dynamic obj = nonEncodable;
+      if (obj.toDate != null) {
+        final date = obj.toDate();
+        if (date is DateTime) {
+          return date.toIso8601String();
+        }
+      }
+    } catch (_) {}
+    try {
+      final dynamic obj = nonEncodable;
+      if (obj.millisecondsSinceEpoch != null) {
+        return obj.millisecondsSinceEpoch;
+      }
+    } catch (_) {}
+    return nonEncodable.toString();
+  }
+
+  /// Recursively cleans map to ensure all values are JSON serializable
+  static Map<String, dynamic> _cleanMap(Map<String, dynamic> source) {
+    final Map<String, dynamic> cleaned = {};
+    source.forEach((key, value) {
+      if (value is Map<String, dynamic>) {
+        cleaned[key] = _cleanMap(value);
+      } else if (value is List) {
+        cleaned[key] = value.map((item) {
+          if (item is Map<String, dynamic>) return _cleanMap(item);
+          if (item is String || item is num || item is bool || item == null) {
+            return item;
+          }
+          return _toEncodable(item);
+        }).toList();
+      } else if (value is String || value is num || value is bool || value == null) {
+        cleaned[key] = value;
+      } else {
+        cleaned[key] = _toEncodable(value);
+      }
+    });
+    return cleaned;
+  }
+
   /// Save user session
   static Future<void> saveUserSession(
     String userId,
     Map<String, dynamic> user,
     bool rememberMe,
-    String password
+    String password,
   ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_userIdKey, userId);
-    await prefs.setString(_userKey, jsonEncode(user));
+
+    final cleanData = _cleanMap(user);
+    final encodedUser = jsonEncode(
+      cleanData,
+      toEncodable: (item) => _toEncodable(item),
+    );
+    await prefs.setString(_userKey, encodedUser);
     await prefs.setBool(_rememberMeKey, rememberMe);
     await prefs.setString(_userPasswordKey, password);
-
-    // if (user.containsKey("OrganizationId") && user["OrganizationId"] != null) {
-    //   await prefs.setInt(_organizationIdKey, user["OrganizationId"]);
-    // }
   }
 
   /// Save avatar + gender (independent of API session)
