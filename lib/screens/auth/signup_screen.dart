@@ -40,7 +40,6 @@ class _SignupScreenState extends State<SignupScreen> {
   CountryCode _selectedCountryCode = CountryCode.fromCountryCode('PK');
 
   int _currentStep = 0; // 0 = personal info, 1 = location
-  bool _isForward = true;
   CountryModel? _selectedCountry;
   StateModel? _selectedState;
   String _selectedCity = '';
@@ -51,9 +50,12 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _isLoadingStates = false;
   bool _isLoadingCities = false;
 
+  late final PageController _pageController;
+
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: _currentStep);
     _nameController.addListener(_validateForm);
     _emailController.addListener(_validateForm);
     _passwordController.addListener(_validateForm);
@@ -70,6 +72,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   void dispose() {
+    _pageController.dispose();
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -83,31 +86,66 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void _goToStep(int newStep) {
+    if (newStep == _currentStep) return;
     setState(() {
-      _isForward = newStep > _currentStep;
       _currentStep = newStep;
+      _isFormValid = _validateCurrentStep();
     });
+    _stepProgressController.setCurrentStep(newStep);
+    if (_pageController.hasClients) {
+      _pageController.animateToPage(
+        newStep,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOutCubic,
+      );
+    }
   }
 
+  // In-memory local cache to optimize repeated lookups and step transitions
+  static List<CountryModel>? _cachedCountries;
+  static final Map<String, List<StateModel>> _cachedStates = {};
+  static final Map<String, List<String>> _cachedCities = {};
+
   Future<void> _fetchCountries() async {
+    if (_cachedCountries != null && _cachedCountries!.isNotEmpty) {
+      setState(() {
+        _countries = _cachedCountries!;
+        _isLoadingCountries = false;
+        _validateForm();
+      });
+      return;
+    }
+
     setState(() => _isLoadingCountries = true);
 
     try {
       final response = await ApiService.getAllCountries();
       if (response.error == false) {
-        setState(() {
-          _countries = response.countries;
-          _isLoadingCountries = false;
-          _validateForm();
-        });
+        _cachedCountries = response.countries;
+        if (mounted) {
+          setState(() {
+            _countries = response.countries;
+            _isLoadingCountries = false;
+            _validateForm();
+          });
+        }
       }
     } catch (e) {
       debugPrint("fetch countries error: $e");
-      setState(() => _isLoadingCountries = false);
+      if (mounted) setState(() => _isLoadingCountries = false);
     }
   }
 
   Future<void> _fetchStates(String country) async {
+    if (_cachedStates.containsKey(country)) {
+      setState(() {
+        _states = _cachedStates[country]!;
+        _isLoadingStates = false;
+        _validateForm();
+      });
+      return;
+    }
+
     setState(() {
       _isLoadingStates = true;
     });
@@ -115,19 +153,32 @@ class _SignupScreenState extends State<SignupScreen> {
     try {
       final response = await ApiService.getAllStates(country);
       if (response.error == false) {
-        setState(() {
-          _states = response.states;
-          _isLoadingStates = false;
-          _validateForm();
-        });
+        _cachedStates[country] = response.states;
+        if (mounted) {
+          setState(() {
+            _states = response.states;
+            _isLoadingStates = false;
+            _validateForm();
+          });
+        }
       }
     } catch (e) {
       debugPrint("fetch states error: $e");
-      setState(() => _isLoadingStates = false);
+      if (mounted) setState(() => _isLoadingStates = false);
     }
   }
 
   Future<void> _fetchCities(String country, String state) async {
+    final cacheKey = "$country:$state";
+    if (_cachedCities.containsKey(cacheKey)) {
+      setState(() {
+        _cities = _cachedCities[cacheKey]!;
+        _isLoadingCities = false;
+        _validateForm();
+      });
+      return;
+    }
+
     setState(() {
       _isLoadingCities = true;
     });
@@ -135,15 +186,18 @@ class _SignupScreenState extends State<SignupScreen> {
     try {
       final response = await ApiService.getAllCities(country, state);
       if (response.error == false) {
-        setState(() {
-          _cities = response.cities;
-          _isLoadingCities = false;
-          _validateForm();
-        });
+        _cachedCities[cacheKey] = response.cities;
+        if (mounted) {
+          setState(() {
+            _cities = response.cities;
+            _isLoadingCities = false;
+            _validateForm();
+          });
+        }
       }
     } catch (e) {
       debugPrint("fetch cities error: $e");
-      setState(() => _isLoadingCities = false);
+      if (mounted) setState(() => _isLoadingCities = false);
     }
   }
 
@@ -175,14 +229,14 @@ class _SignupScreenState extends State<SignupScreen> {
           isConfirmPasswordValid;
     } else if (_currentStep == 1) {
       // Validate location fields for step 1
-      return _contactController.text.isNotEmpty &&
-          _contactController.text.length >= 8 &&
-          RegExp(r'^[0-9]+$').hasMatch(_contactController.text);
-    } else {
-      // Validate location fields for step 2
       return _selectedCountry != null &&
           _selectedState != null &&
           _selectedCity.isNotEmpty;
+    } else {
+      // Validate contact fields for step 2
+      return _contactController.text.isNotEmpty &&
+          _contactController.text.length >= 8 &&
+          RegExp(r'^[0-9]+$').hasMatch(_contactController.text);
     }
   }
 
@@ -259,56 +313,49 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
               ),
             ),
-            Center(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 600),
-                transitionBuilder: (child, animation) {
-                  // ✅ Outgoing slide (reverse direction)
-                  final offsetAnimation =
-                      Tween<Offset>(
-                        begin: _isForward
-                            ? const Offset(
-                                1.0,
-                                0.0,
-                              ) // forward → slide from right
-                            : const Offset(
-                                -1.0,
-                                0.0,
-                              ), // backward → slide from left
-                        end: Offset.zero,
-                      ).animate(
-                        CurvedAnimation(
-                          parent: animation,
-                          curve: Curves.easeInOut, // ✅ smooth curve
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 80),
+                child: PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentStep = index;
+                      _isFormValid = _validateCurrentStep();
+                    });
+                    _stepProgressController.setCurrentStep(index);
+                  },
+                  children: [
+                    _KeepAlivePage(
+                      child: Center(
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: _buildPersonalInfoForm(),
                         ),
-                      );
-
-                  final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0)
-                      .animate(
-                        CurvedAnimation(
-                          parent: animation,
-                          curve: Curves.easeIn,
-                        ),
-                      );
-
-                  return FadeTransition(
-                    opacity: fadeAnimation,
-                    child: SlideTransition(
-                      position: offsetAnimation,
-                      child: child,
+                      ),
                     ),
-                  );
-                },
-                child: SingleChildScrollView(
-                  key: ValueKey(_currentStep), // ✅ triggers animation
-                  child: Column(
-                    children: [
-                      if (_currentStep == 0) _buildPersonalInfoForm(),
-                      if (_currentStep == 1)
-                        _buildContactForm(), // ✅ CountryCode state preserved
-                      if (_currentStep == 2) _buildLocationForm(),
-                    ],
-                  ),
+                    _KeepAlivePage(
+                      child: Center(
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: _buildLocationForm(),
+                        ),
+                      ),
+                    ),
+                    _KeepAlivePage(
+                      child: Center(
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: _buildContactForm(),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -582,6 +629,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     CountryCodePicker(
+                      key: ValueKey(_selectedCountryCode.code ?? 'PK'),
                       initialSelection: _selectedCountryCode.code ?? 'PK',
                       onInit: (country) {
                         if (country != null && mounted) {
@@ -679,6 +727,41 @@ class _SignupScreenState extends State<SignupScreen> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
+          RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style: AppTheme.textLabel(context).copyWith(fontSize: 12),
+              children: [
+                const TextSpan(text: 'By register, you agree to our '),
+                TextSpan(
+                  text: 'Terms & Condition, ',
+                  style: AppTheme.textLink(context).copyWith(fontSize: 12),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      debugPrint("Terms & Condition clicked");
+                    },
+                ),
+                TextSpan(
+                  text: 'Data Policy ',
+                  style: AppTheme.textLink(context).copyWith(fontSize: 12),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      debugPrint("Data Policy clicked");
+                    },
+                ),
+                const TextSpan(text: 'and '),
+                TextSpan(
+                  text: 'Cookies Policy.',
+                  style: AppTheme.textLink(context).copyWith(fontSize: 12),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      debugPrint("Cookies Policy clicked");
+                    },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             spacing: 16,
@@ -690,7 +773,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   disabled: _isLoading,
                   onPressed: () {
                     _stepProgressController.previousStep();
-                    _goToStep(0);
+                    _goToStep(1);
                     setState(() {
                       _validateForm();
                     });
@@ -701,19 +784,22 @@ class _SignupScreenState extends State<SignupScreen> {
               Expanded(
                 flex: 1,
                 child: FlatButton(
-                  text: 'Next',
+                  text: 'Register',
                   disabled: !_isFormValid || _isLoading,
                   onPressed: (_isFormValid && !_isLoading)
-                      ? () {
-                          if (_validateCurrentStep()) {
-                            _stepProgressController.nextStep();
-                            _goToStep(2);
+                      ? () async {
+                          if (!_validateCurrentStep()) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please complete all fields'),
+                              ),
+                            );
+                            return;
                           }
+                          await _submitCompleteForm();
                         }
                       : null,
                   loading: _isLoading,
-                  icon: Icons.arrow_forward_ios_rounded,
-                  iconLeft: false,
                 ),
               ),
             ],
@@ -808,12 +894,18 @@ class _SignupScreenState extends State<SignupScreen> {
               onChanged: _isLoadingCountries
                   ? null
                   : (CountryModel? value) {
+                      if (value == _selectedCountry) return;
                       setState(() {
                         _selectedCountry = value;
                         _selectedState = null; // ✅ reset
                         _selectedCity = ''; // ✅ reset
                         _states = [];
                         _cities = [];
+                        if (value != null && value.iso2.isNotEmpty) {
+                          _selectedCountryCode = CountryCode.fromCountryCode(
+                            value.iso2.toUpperCase(),
+                          );
+                        }
                       });
                       _validateForm();
                       if (value != null) {
@@ -977,6 +1069,7 @@ class _SignupScreenState extends State<SignupScreen> {
               onChanged: _selectedCountry == null
                   ? null
                   : (StateModel? value) {
+                      if (value == _selectedState) return;
                       setState(() {
                         _selectedState = value;
                         _selectedCity = '';
@@ -1142,6 +1235,7 @@ class _SignupScreenState extends State<SignupScreen> {
               onChanged: _selectedState == null
                   ? null
                   : (String? value) {
+                      if (value == _selectedCity) return;
                       setState(() {
                         _selectedCity = value ?? '';
                       });
@@ -1232,41 +1326,6 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
-              style: AppTheme.textLabel(context).copyWith(fontSize: 12),
-              children: [
-                TextSpan(text: 'By register, you agree to our '),
-                TextSpan(
-                  text: 'Terms & Condition, ',
-                  style: AppTheme.textLink(context).copyWith(fontSize: 12),
-                  recognizer: TapGestureRecognizer()
-                    ..onTap = () {
-                      debugPrint("Terms & Condition clicked");
-                    },
-                ),
-                TextSpan(
-                  text: 'Data Policy ',
-                  style: AppTheme.textLink(context).copyWith(fontSize: 12),
-                  recognizer: TapGestureRecognizer()
-                    ..onTap = () {
-                      debugPrint("Data Policy clicked");
-                    },
-                ),
-                TextSpan(text: 'and '),
-                TextSpan(
-                  text: 'Cookies Policy.',
-                  style: AppTheme.textLink(context).copyWith(fontSize: 12),
-                  recognizer: TapGestureRecognizer()
-                    ..onTap = () {
-                      debugPrint("Cookies Policy clicked");
-                    },
-                ),
-              ],
-            ),
-          ),
           const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1279,7 +1338,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   disabled: _isLoading,
                   onPressed: () {
                     _stepProgressController.previousStep();
-                    _goToStep(1);
+                    _goToStep(0);
                     setState(() {
                       _validateForm();
                     });
@@ -1290,22 +1349,19 @@ class _SignupScreenState extends State<SignupScreen> {
               Expanded(
                 flex: 1,
                 child: FlatButton(
-                  text: 'Register',
+                  text: 'Next',
                   disabled: !_isFormValid || _isLoading,
                   onPressed: (_isFormValid && !_isLoading)
-                      ? () async {
-                          if (!_validateCurrentStep()) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please complete all fields'),
-                              ),
-                            );
-                            return;
+                      ? () {
+                          if (_validateCurrentStep()) {
+                            _stepProgressController.nextStep();
+                            _goToStep(2);
                           }
-                          await _submitCompleteForm();
                         }
                       : null,
                   loading: _isLoading,
+                  icon: Icons.arrow_forward_ios_rounded,
+                  iconLeft: false,
                 ),
               ),
             ],
@@ -1364,5 +1420,26 @@ class _SignupScreenState extends State<SignupScreen> {
         setState(() => _isLoading = false);
       }
     }
+  }
+}
+
+/// Helper widget to retain step state in PageView and prevent reloading on step transitions
+class _KeepAlivePage extends StatefulWidget {
+  final Widget child;
+  const _KeepAlivePage({required this.child});
+
+  @override
+  State<_KeepAlivePage> createState() => _KeepAlivePageState();
+}
+
+class _KeepAlivePageState extends State<_KeepAlivePage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 }
