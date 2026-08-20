@@ -261,7 +261,7 @@ class _SignupScreenState extends State<SignupScreen> {
               child: StepProgress(
                 totalSteps: 3,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 130,
+                  horizontal: 100,
                   vertical: 30,
                 ),
                 controller: _stepProgressController,
@@ -332,27 +332,21 @@ class _SignupScreenState extends State<SignupScreen> {
                   },
                   children: [
                     _KeepAlivePage(
-                      child: Center(
-                        child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          child: _buildPersonalInfoForm(),
-                        ),
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: _buildPersonalInfoForm(),
                       ),
                     ),
                     _KeepAlivePage(
-                      child: Center(
-                        child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          child: _buildLocationForm(),
-                        ),
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: _buildLocationForm(),
                       ),
                     ),
                     _KeepAlivePage(
-                      child: Center(
-                        child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          child: _buildContactForm(),
-                        ),
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: _buildContactForm(),
                       ),
                     ),
                   ],
@@ -385,7 +379,14 @@ class _SignupScreenState extends State<SignupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Image.asset(AppTheme.appLogo(context), height: 100, width: 100),
+          Hero(
+            tag: 'logo',
+            child: Image.asset(
+              AppTheme.appLogo(context),
+              height: 100,
+              width: 100,
+            ),
+          ),
           const SizedBox(height: 40),
           Text(
             "Personal Information",
@@ -606,7 +607,14 @@ class _SignupScreenState extends State<SignupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Image.asset(AppTheme.appLogo(context), height: 100, width: 100),
+          Hero(
+            tag: 'logo',
+            child: Image.asset(
+              AppTheme.appLogo(context),
+              height: 100,
+              width: 100,
+            ),
+          ),
           const SizedBox(height: 40),
           Text(
             "Contact Number",
@@ -815,7 +823,14 @@ class _SignupScreenState extends State<SignupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Image.asset(AppTheme.appLogo(context), height: 100, width: 100),
+          Hero(
+            tag: 'logo',
+            child: Image.asset(
+              AppTheme.appLogo(context),
+              height: 100,
+              width: 100,
+            ),
+          ),
           const SizedBox(height: 40),
           Text(
             "Where are you located?",

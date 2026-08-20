@@ -1,4 +1,6 @@
 import 'dart:ui';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import '/screens/auth/login_screen.dart';
 import '/screens/dashboard_screen.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +26,7 @@ class MenuDrawer extends StatefulWidget {
 
 class _MenuDrawerState extends State<MenuDrawer>
     with SingleTickerProviderStateMixin {
+  final auth = FirebaseAuth.instance;
   late AnimationController _controller;
   late List<Animation<Offset>> _slideAnimations;
   late List<Animation<double>> _fadeAnimations;
@@ -80,14 +83,16 @@ class _MenuDrawerState extends State<MenuDrawer>
   Future<void> _logout() async {
     await SessionManager.clearSession();
     if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (_, __, ___) => LoginScreen(),
-          transitionsBuilder: (_, a, __, c) =>
-              FadeTransition(opacity: a, child: c),
-        ),
-      );
+      auth.signOut().then((_) {
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => LoginScreen(),
+            transitionsBuilder: (_, a, __, c) =>
+                FadeTransition(opacity: a, child: c),
+          ),
+        );
+      });
     }
   }
 

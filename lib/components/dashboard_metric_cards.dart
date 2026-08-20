@@ -407,21 +407,6 @@ class _DashboardMetricCardsState extends State<DashboardMetricCards>
           decoration: BoxDecoration(
             color: AppTheme.cardBg(context),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDark
-                  ? AppColor.neutral_80.withValues(alpha: 0.6)
-                  : AppColor.neutral_10,
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: isDark
-                    ? Colors.black.withValues(alpha: 0.2)
-                    : AppColor.neutral_20.withValues(alpha: 0.15),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
