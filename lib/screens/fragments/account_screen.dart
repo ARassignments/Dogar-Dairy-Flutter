@@ -9,6 +9,7 @@ import '/screens/auth/login_screen.dart';
 import '/screens/profile_screen.dart';
 import '/screens/subscription_screen.dart';
 import '/settings/milk_type_settings.dart';
+import '/settings/notification_settings.dart';
 import '/settings/payment_methods_settings.dart';
 import '/theme/theme.dart';
 import '/utils/session_manager.dart';
@@ -23,7 +24,6 @@ class AccountScreen extends StatefulWidget {
 class _AccountScreenState extends State<AccountScreen>
     with AutomaticKeepAliveClientMixin {
   Map<String, dynamic>? user;
-  bool _isLoadingUser = true;
 
   final auth = FirebaseAuth.instance;
   @override
@@ -37,25 +37,25 @@ class _AccountScreenState extends State<AccountScreen>
 
   Future<void> _loadSession() async {
     final userData = await SessionManager.getUser();
-    setState(() {
-      user = userData;
-      _isLoadingUser = false;
-    });
+    if (mounted) {
+      setState(() {
+        user = userData;
+      });
+    }
   }
 
   Future<void> _logout() async {
     await SessionManager.clearSession();
+    await auth.signOut();
     if (mounted) {
-      auth.signOut().then((_) {
-        Navigator.pushReplacement(
-          context,
-          PageRouteBuilder(
-            pageBuilder: (_, __, ___) => LoginScreen(),
-            transitionsBuilder: (_, a, __, c) =>
-                FadeTransition(opacity: a, child: c),
-          ),
-        );
-      });
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => LoginScreen(),
+          transitionsBuilder: (_, a, __, c) =>
+              FadeTransition(opacity: a, child: c),
+        ),
+      );
     }
   }
 
@@ -374,7 +374,7 @@ class _AccountScreenState extends State<AccountScreen>
                       ),
                       trailing: Switch(
                         value: Theme.of(context).brightness == Brightness.dark,
-                        activeThumbColor: AppTheme.iconColor(context),
+                        activeThumbColor: AppTheme.togglerColor(context),
                         onChanged: (value) {
                           ThemeController.setTheme(
                             value ? ThemeMode.dark : ThemeMode.light,
@@ -387,6 +387,48 @@ class _AccountScreenState extends State<AccountScreen>
                             ThemeMode.dark;
                         ThemeController.setTheme(
                           isDark ? ThemeMode.light : ThemeMode.dark,
+                        );
+                      },
+                    ),
+                    Divider(height: 1, color: AppTheme.dividerBg(context)),
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      leading: Icon(HugeIconsStroke.notification01, size: 24),
+                      title: Text(
+                        "Notifications",
+                        style: AppTheme.textLabel(context),
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          PageRouteBuilder(
+                            opaque: false,
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    const NotificationSettingsScreen(),
+                            transitionsBuilder:
+                                (
+                                  context,
+                                  animation,
+                                  secondaryAnimation,
+                                  child,
+                                ) {
+                                  const begin = Offset(0.0, 1.0);
+                                  const end = Offset.zero;
+                                  const curve = Curves.easeInOut;
+                                  final tween = Tween(
+                                    begin: begin,
+                                    end: end,
+                                  ).chain(CurveTween(curve: curve));
+                                  return SlideTransition(
+                                    position: animation.drive(tween),
+                                    child: child,
+                                  );
+                                },
+                          ),
                         );
                       },
                     ),
@@ -481,12 +523,13 @@ class _AccountScreenState extends State<AccountScreen>
                                 .externalApplication, // opens in browser
                           );
                         } else {
-                          if (!mounted) return;
-                          AppSnackBar.show(
-                            context,
-                            message: "Could not open the website.",
-                            type: AppSnackBarType.error,
-                          );
+                          if (context.mounted) {
+                            AppSnackBar.show(
+                              context,
+                              message: "Could not open the website.",
+                              type: AppSnackBarType.error,
+                            );
+                          }
                         }
                       },
                     ),

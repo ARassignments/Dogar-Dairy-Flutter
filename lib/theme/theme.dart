@@ -372,6 +372,11 @@ class AppTheme {
       ? AppColor.neutral_50
       : AppColor.neutral_30;
 
+  static Color togglerColor(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+      ? AppColor.white
+      : AppColor.primaryColor;
+
   static TextStyle textLink(BuildContext context) => TextStyle(
     fontFamily: AppFontFamily.poppinsSemiBold,
     fontSize: 14,

@@ -142,7 +142,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           onTap: () => _drawerController.toggle!(),
                           child: Icon(
                             HugeIconsStroke.menu02,
-                            color: AppTheme.iconColorThree(context),
+                            color: AppTheme.iconColor(context),
                             size: 24,
                           ),
                         ),
@@ -173,8 +173,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                   Text(
                                     "Hi, ",
                                     style: AppTheme.textTitle(context).copyWith(
+                                      fontFamily: 'Poppins',
                                       fontSize: 20,
-                                      fontFamily: AppFontFamily.poppinsBold,
+                                      fontWeight: FontWeight.w700,
                                     ),
                                   ),
                                   Text(
@@ -186,8 +187,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: AppTheme.textTitle(context).copyWith(
+                                      fontFamily: 'Poppins',
                                       fontSize: 20,
-                                      fontFamily: AppFontFamily.poppinsLight,
+                                      fontWeight: FontWeight.w300,
                                     ),
                                   ),
                                   Text(
@@ -213,8 +215,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           Text(
                             "My",
                             style: AppTheme.textTitle(context).copyWith(
+                              fontFamily: 'Poppins',
                               fontSize: 20,
-                              fontFamily: AppFontFamily.poppinsBold,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                           Text(
@@ -222,8 +225,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: AppTheme.textTitle(context).copyWith(
+                              fontFamily: 'Poppins',
                               fontSize: 20,
-                              fontFamily: AppFontFamily.poppinsLight,
+                              fontWeight: FontWeight.w300,
                             ),
                           ),
                           Text(
@@ -287,7 +291,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ),
                         const SizedBox(width: 16),
                       ],
-                      if (_currentIndex > 0 && _currentIndex < 4)
+                      if (_currentIndex > 0 && _currentIndex < 3)
                         InkWell(
                           onTap: () {
                             setState(() {
@@ -307,11 +311,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             _showSearchBar
                                 ? HugeIconsStroke.cancel02
                                 : HugeIconsSolid.search01,
-                            color: AppTheme.iconColorThree(context),
+                            color: AppTheme.iconColor(context),
                             size: 24,
                           ),
                         ),
                       if (!_showSearchBar) ...[
+                        const SizedBox(width: 12),
+                        InkWell(
+                          onTap: () {},
+                          child: Icon(
+                            HugeIconsStroke.notification01,
+                            color: AppTheme.iconColorThree(context),
+                            size: 24,
+                          ),
+                        ),
                         const SizedBox(width: 12),
                         InkWell(
                           onTap: () {
@@ -319,7 +332,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           },
                           child: Icon(
                             HugeIconsStroke.logout02,
-                            color: AppTheme.iconColorThree(context),
+                            color: AppTheme.iconColor(context),
                             size: 24,
                           ),
                         ),

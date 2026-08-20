@@ -34,9 +34,11 @@ class _MilkTypeSettingsScreenState
         centerTitle: true,
         title: Text(
           "Milk Types",
-          style: AppTheme.textTitle(
-            context,
-          ).copyWith(fontSize: 20, fontFamily: AppFontFamily.poppinsLight),
+          style: AppTheme.textTitle(context).copyWith(
+            fontFamily: 'Poppins',
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         leading: IconButton(
           icon: const Icon(HugeIconsStroke.arrowLeft01, size: 20),

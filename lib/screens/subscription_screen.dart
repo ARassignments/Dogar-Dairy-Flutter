@@ -64,9 +64,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
         centerTitle: true,
         title: Text(
           "Subscriptions",
-          style: AppTheme.textTitle(
-            context,
-          ).copyWith(fontSize: 20, fontFamily: AppFontFamily.poppinsLight),
+          style: AppTheme.textTitle(context).copyWith(
+            fontFamily: 'Poppins',
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         leading: IconButton(
           icon: const Icon(HugeIconsStroke.arrowLeft01, size: 20),
@@ -132,7 +134,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                             plan: _plans[i],
                             isSelected: _selectedPlan == i,
                             onTap: () => setState(
-                              () => _selectedPlan = _selectedPlan == i ? null : i,
+                              () =>
+                                  _selectedPlan = _selectedPlan == i ? null : i,
                             ),
                           ),
                         ),
@@ -496,7 +499,9 @@ class _PricingCardState extends State<_PricingCard>
                                 : Theme.of(context).brightness ==
                                       Brightness.dark
                                 ? Colors.white.withValues(alpha: 0.6)
-                                : AppTheme.iconColor(context).withValues(alpha: 0.6),
+                                : AppTheme.iconColor(
+                                    context,
+                                  ).withValues(alpha: 0.6),
                             fontSize: 13,
                             fontWeight: FontWeight.w400,
                           ),
@@ -713,7 +718,11 @@ class _CTAButtonState extends State<_CTAButton> {
       onTapCancel: () => setState(() => _pressed = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        transform: Matrix4.diagonal3Values(_pressed ? 0.97 : 1.0, _pressed ? 0.97 : 1.0, 1.0),
+        transform: Matrix4.diagonal3Values(
+          _pressed ? 0.97 : 1.0,
+          _pressed ? 0.97 : 1.0,
+          1.0,
+        ),
         transformAlignment: Alignment.center,
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14),

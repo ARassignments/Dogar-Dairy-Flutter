@@ -25,9 +25,11 @@ class _PaymentMethodsSettingsScreenState
         centerTitle: true,
         title: Text(
           "Payment Methods",
-          style: AppTheme.textTitle(
-            context,
-          ).copyWith(fontSize: 20, fontFamily: AppFontFamily.poppinsLight),
+          style: AppTheme.textTitle(context).copyWith(
+            fontFamily: 'Poppins',
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         leading: IconButton(
           icon: const Icon(HugeIconsStroke.arrowLeft01, size: 20),
@@ -60,7 +62,8 @@ class _PaymentMethodsSettingsScreenState
                 checkColor: Theme.of(context).brightness == Brightness.dark
                     ? AppColor.neutral_20
                     : AppColor.neutral_70,
-                selectedTileColor: Theme.of(context).brightness == Brightness.dark
+                selectedTileColor:
+                    Theme.of(context).brightness == Brightness.dark
                     ? AppColor.neutral_70
                     : AppColor.neutral_20,
                 contentPadding: EdgeInsets.symmetric(horizontal: 10),

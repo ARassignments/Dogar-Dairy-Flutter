@@ -249,9 +249,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         titleSpacing: 0,
         title: Text(
           "My Profile",
-          style: AppTheme.textTitle(
-            context,
-          ).copyWith(fontSize: 20, fontFamily: AppFontFamily.poppinsLight),
+          style: AppTheme.textTitle(context).copyWith(
+            fontFamily: 'Poppins',
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         centerTitle: true,
         leading: IconButton(
@@ -301,11 +303,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                   child:
                                                       CircularProgressIndicator(),
                                                 ),
-                                            errorWidget: (context, url, error) =>
-                                                const Icon(
-                                                  HugeIconsSolid.user03,
-                                                  size: 50,
-                                                ),
+                                            errorWidget:
+                                                (context, url, error) =>
+                                                    const Icon(
+                                                      HugeIconsSolid.user03,
+                                                      size: 50,
+                                                    ),
                                           ),
                                   ),
                                 ),
@@ -415,7 +418,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             horizontal: 16,
                             vertical: 8,
                           ),
-                          leading: Icon(HugeIconsStroke.mapsLocation01, size: 24),
+                          leading: Icon(
+                            HugeIconsStroke.mapsLocation01,
+                            size: 24,
+                          ),
                           title: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
