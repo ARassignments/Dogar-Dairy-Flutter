@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons_pro/hugeicons.dart';
 import '/components/appsnackbar.dart';
+import '/providers/notification_provider.dart';
 import '/services/notification_service.dart';
 import '/theme/theme.dart';
 
-class NotificationSettingsScreen extends StatefulWidget {
+class NotificationSettingsScreen extends ConsumerStatefulWidget {
   const NotificationSettingsScreen({super.key});
 
   @override
-  State<NotificationSettingsScreen> createState() =>
+  ConsumerState<NotificationSettingsScreen> createState() =>
       _NotificationSettingsScreenState();
 }
 
 class _NotificationSettingsScreenState
-    extends State<NotificationSettingsScreen> {
+    extends ConsumerState<NotificationSettingsScreen> {
   bool _isLoading = true;
   bool _isTesting = false;
 
@@ -33,10 +35,7 @@ class _NotificationSettingsScreenState
   }
 
   Future<void> _toggleMaster(bool value) async {
-    setState(() {
-      NotificationService.masterEnabled = value;
-    });
-    await NotificationService.setMasterEnabled(value);
+    ref.read(notificationProvider.notifier).setEnabled(value);
     if (value) {
       final granted = await NotificationService.requestPermission();
       if (!granted && mounted) {
@@ -56,7 +55,8 @@ class _NotificationSettingsScreenState
   }
 
   Future<void> _triggerTest({String? title, String? message}) async {
-    if (!NotificationService.masterEnabled) {
+    final notifState = ref.read(notificationProvider);
+    if (!notifState.isEnabled) {
       AppSnackBar.show(
         context,
         message: "Please enable master notifications first",
@@ -70,17 +70,51 @@ class _NotificationSettingsScreenState
     await Future.delayed(const Duration(milliseconds: 300));
 
     if (mounted) {
+      final testTitle = title ?? "Dogar Dairy Pure Farm";
+      final testMessage =
+          message ??
+          "Your morning milk delivery of 2.0L Buffalo Milk is on its way!";
+
       await NotificationService.sendTestNotification(
         context,
-        customTitle: title,
-        customMessage: message,
+        customTitle: testTitle,
+        customMessage: testMessage,
       );
+
+      ref
+          .read(notificationProvider.notifier)
+          .addNotification(
+            NotificationItem(
+              id: "test-${DateTime.now().millisecondsSinceEpoch}",
+              title: testTitle,
+              message: testMessage,
+              category:
+                  testTitle.contains("Khata") || testTitle.contains("Payment")
+                  ? "Billing"
+                  : (testTitle.contains("Offer") ||
+                            testTitle.contains("Discount")
+                        ? "Offers"
+                        : "Delivery"),
+              timestamp: "Just now",
+              isRead: false,
+              icon: testTitle.contains("Payment")
+                  ? HugeIconsStroke.invoice01
+                  : (testTitle.contains("Offer")
+                        ? HugeIconsStroke.discount01
+                        : HugeIconsStroke.truck),
+              iconColor: const Color(0xFF1976D2),
+              iconBgColor: const Color(0xFF1976D2).withValues(alpha: 0.12),
+            ),
+          );
+
       setState(() => _isTesting = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final notifState = ref.watch(notificationProvider);
+    final isMasterEnabled = notifState.isEnabled;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final platformName = NotificationService.getPlatformName();
 
@@ -91,7 +125,7 @@ class _NotificationSettingsScreenState
         titleSpacing: 0,
         centerTitle: true,
         title: Text(
-          "Notifications",
+          "Notifications Settings",
           style: AppTheme.textTitle(context).copyWith(
             fontFamily: 'Poppins',
             fontSize: 20,
@@ -122,7 +156,7 @@ class _NotificationSettingsScreenState
                         vertical: 12,
                       ),
                       decoration: BoxDecoration(
-                        color: NotificationService.masterEnabled
+                        color: isMasterEnabled
                             ? (isDark
                                   ? AppColor.primary_90.withValues(alpha: 0.5)
                                   : AppColor.primary_5)
@@ -131,7 +165,7 @@ class _NotificationSettingsScreenState
                                   : AppColor.neutral_10),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: NotificationService.masterEnabled
+                          color: isMasterEnabled
                               ? (isDark
                                     ? AppColor.primary_70
                                     : AppColor.primary_20)
@@ -145,7 +179,7 @@ class _NotificationSettingsScreenState
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: NotificationService.masterEnabled
+                              color: isMasterEnabled
                                   ? AppTheme.togglerColor(
                                       context,
                                     ).withValues(alpha: 0.15)
@@ -153,10 +187,10 @@ class _NotificationSettingsScreenState
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
-                              NotificationService.masterEnabled
+                              isMasterEnabled
                                   ? HugeIconsSolid.notification01
                                   : HugeIconsStroke.notificationOff01,
-                              color: NotificationService.masterEnabled
+                              color: isMasterEnabled
                                   ? AppTheme.togglerColor(context)
                                   : Colors.grey,
                               size: 22,
@@ -184,7 +218,7 @@ class _NotificationSettingsScreenState
                                         vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: AppTheme.togglerColor(context),
+                                        color: AppColor.primaryColor,
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
@@ -201,7 +235,7 @@ class _NotificationSettingsScreenState
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  NotificationService.masterEnabled
+                                  isMasterEnabled
                                       ? "Synced for Android, iOS, Web & Windows"
                                       : "Notifications are currently paused",
                                   style: AppTheme.textSearchInfoLabeled(
@@ -247,7 +281,7 @@ class _NotificationSettingsScreenState
                           ).copyWith(fontSize: 12),
                         ),
                         activeThumbColor: AppTheme.togglerColor(context),
-                        value: NotificationService.masterEnabled,
+                        value: isMasterEnabled,
                         onChanged: _toggleMaster,
                       ),
                     ),
@@ -265,10 +299,10 @@ class _NotificationSettingsScreenState
                     const SizedBox(height: 10),
 
                     AnimatedOpacity(
-                      opacity: NotificationService.masterEnabled ? 1.0 : 0.4,
+                      opacity: isMasterEnabled ? 1.0 : 0.4,
                       duration: const Duration(milliseconds: 300),
                       child: IgnorePointer(
-                        ignoring: !NotificationService.masterEnabled,
+                        ignoring: !isMasterEnabled,
                         child: Container(
                           decoration: BoxDecoration(
                             color: AppTheme.cardBg(context),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:hugeicons_pro/hugeicons.dart';
 import '/providers/search_provider.dart';
+import '/components/animated_notification_bell.dart';
 import '/components/dialog_logout.dart';
 import '/components/menu_drawer.dart';
 import '/components/loading_screen.dart';
@@ -81,17 +82,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Future<void> _logout() async {
     await SessionManager.clearSession();
+    await auth.signOut();
     if (mounted) {
-      auth.signOut().then((_) {
-        Navigator.pushReplacement(
-          context,
-          PageRouteBuilder(
-            pageBuilder: (_, __, ___) => LoginScreen(),
-            transitionsBuilder: (_, a, __, c) =>
-                FadeTransition(opacity: a, child: c),
-          ),
-        );
-      });
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => LoginScreen(),
+          transitionsBuilder: (_, a, __, c) =>
+              FadeTransition(opacity: a, child: c),
+        ),
+      );
     }
   }
 
@@ -316,16 +316,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           ),
                         ),
                       if (!_showSearchBar) ...[
-                        const SizedBox(width: 12),
-                        InkWell(
-                          onTap: () {},
-                          child: Icon(
-                            HugeIconsStroke.notification01,
-                            color: AppTheme.iconColorThree(context),
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 8),
+                        const AnimatedNotificationBell(),
+                        const SizedBox(width: 8),
                         InkWell(
                           onTap: () {
                             DialogLogout().showDialog(context, _logout);

@@ -398,7 +398,7 @@ class _AccountScreenState extends State<AccountScreen>
                       ),
                       leading: Icon(HugeIconsStroke.notification01, size: 24),
                       title: Text(
-                        "Notifications",
+                        "Notifications Settings",
                         style: AppTheme.textLabel(context),
                       ),
                       onTap: () {
