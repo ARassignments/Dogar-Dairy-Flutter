@@ -80,9 +80,9 @@ class _AnimatedNotificationBellState
         pageBuilder: (context, animation, secondaryAnimation) =>
             const NotificationsScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(1.0, 0.0);
+          const begin = Offset(0.0, 1.0);
           const end = Offset.zero;
-          const curve = Curves.easeInOutCubic;
+          const curve = Curves.easeInOut;
           final tween = Tween(
             begin: begin,
             end: end,

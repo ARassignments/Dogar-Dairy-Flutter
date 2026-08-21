@@ -25,7 +25,8 @@ class DashboardScreen extends ConsumerStatefulWidget {
   ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+class _DashboardScreenState extends ConsumerState<DashboardScreen>
+    with SingleTickerProviderStateMixin {
   Map<String, dynamic>? user;
   bool _isLoadingUser = true;
 
@@ -39,6 +40,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   final DeliveriesScreen deliveriesScreen = const DeliveriesScreen();
   final KhataScreen khataScreen = const KhataScreen();
   final AccountScreen accountScreen = const AccountScreen();
+
+  // Entrance animations
+  late AnimationController _entranceController;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+  late Animation<Offset> _appBarSlideAnimation;
+  late Animation<Offset> _bodySlideAnimation;
+  late Animation<Offset> _bottomNavSlideAnimation;
 
   List<String> _getRoleMenus(String role) {
     final r = role.toLowerCase();
@@ -55,12 +64,64 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   void initState() {
     super.initState();
     _loadSession();
+
+    // Setup choreographed entrance animations
+    _entranceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 750),
+    );
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _entranceController,
+      curve: const Interval(0.0, 0.8, curve: Curves.easeOutCubic),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.98, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _entranceController,
+        curve: const Interval(0.0, 0.9, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    _appBarSlideAnimation = Tween<Offset>(
+      begin: const Offset(0.0, -0.15),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _entranceController,
+        curve: const Interval(0.05, 0.95, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    _bodySlideAnimation = Tween<Offset>(
+      begin: const Offset(0.0, 0.04),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _entranceController,
+        curve: const Interval(0.1, 1.0, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    _bottomNavSlideAnimation = Tween<Offset>(
+      begin: const Offset(0.0, 0.3),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _entranceController,
+        curve: const Interval(0.15, 1.0, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    _entranceController.forward();
+
     _searchController.addListener(() {
       final query = _searchController.text.trim();
       if (ref.read(searchQueryProvider) != query) {
         ref.read(searchQueryProvider.notifier).state = query;
       }
     });
+
     pages = [
       HomeScreen(
         onMenuSelect: (index) {
@@ -77,6 +138,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   void dispose() {
+    _entranceController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
   }
@@ -154,283 +216,324 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           },
         ),
         mainScreen: Scaffold(
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            titleSpacing: 0,
-            toolbarHeight: 70,
-            title: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Row(
-                    children: [
-                      if (!_showSearchBar) ...[
-                        InkWell(
-                          onTap: () => _drawerController.toggle!(),
-                          child: Icon(
-                            HugeIconsStroke.menu02,
-                            color: AppTheme.iconColor(context),
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        if (_currentIndex < 1) ...[
-                          Row(
-                            children: [
-                              ClipOval(
-                                child: ValueListenableBuilder(
-                                  valueListenable: avatarNotifier,
-                                  builder: (context, avatar, _) {
-                                    return avatar != null
-                                        ? Image.network(
-                                            avatar,
-                                            width: 40,
-                                            height: 40,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) =>
-                                                _defaultAvatar(),
-                                          )
-                                        : _defaultAvatar();
-                                  },
-                                ),
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(70),
+            child: SlideTransition(
+              position: _appBarSlideAnimation,
+              child: AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                titleSpacing: 0,
+                toolbarHeight: 70,
+                title: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Row(
+                        children: [
+                          if (!_showSearchBar) ...[
+                            InkWell(
+                              onTap: () => _drawerController.toggle!(),
+                              child: Icon(
+                                HugeIconsStroke.menu02,
+                                color: AppTheme.iconColor(context),
+                                size: 24,
                               ),
-                              const SizedBox(width: 10),
+                            ),
+                            const SizedBox(width: 8),
+                            if (_currentIndex < 1) ...[
                               Row(
                                 children: [
-                                  Text(
-                                    "Hi, ",
-                                    style: AppTheme.textTitle(context).copyWith(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w700,
+                                  ClipOval(
+                                    child: ValueListenableBuilder(
+                                      valueListenable: avatarNotifier,
+                                      builder: (context, avatar, _) {
+                                        return avatar != null
+                                            ? Image.network(
+                                                avatar,
+                                                width: 40,
+                                                height: 40,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (_, __, ___) =>
+                                                    _defaultAvatar(),
+                                              )
+                                            : _defaultAvatar();
+                                      },
                                     ),
                                   ),
-                                  Text(
-                                    _isLoadingUser
-                                        ? ''
-                                        : (userModel?.name.isNotEmpty == true
-                                              ? userModel!.name
-                                              : (user?["name"] ?? 'Vendor')),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: AppTheme.textTitle(context).copyWith(
-                                      fontFamily: 'Poppins',
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w300,
-                                    ),
-                                  ),
-                                  Text(
-                                    ".",
-                                    style: AppTheme.textTitleActive(context)
-                                        .copyWith(
-                                          fontFamily: 'Poppins',
-                                          fontSize: 18,
-                                        ),
+                                  const SizedBox(width: 10),
+                                  Row(
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Dogar Dairy",
+                                            style: AppTheme.textLabel(context)
+                                                .copyWith(
+                                                  fontFamily: 'Poppins',
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                          ),
+                                          Row(
+                                            children: [
+                                              Text(
+                                                "Hi, ",
+                                                style: AppTheme.textTitle(context)
+                                                    .copyWith(
+                                                      fontFamily: 'Poppins',
+                                                      fontSize: 20,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                    ),
+                                              ),
+                                              Text(
+                                                _isLoadingUser
+                                                    ? ''
+                                                    : (userModel?.name.isNotEmpty ==
+                                                                true
+                                                            ? userModel!.name
+                                                            : (user?["name"] ??
+                                                                'Vendor')),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: AppTheme.textTitle(context)
+                                                    .copyWith(
+                                                      fontFamily: 'Poppins',
+                                                      fontSize: 20,
+                                                      fontWeight:
+                                                          FontWeight.w300,
+                                                    ),
+                                              ),
+                                              Text(
+                                                ".",
+                                                style: AppTheme.textTitleActive(
+                                                        context)
+                                                    .copyWith(
+                                                      fontFamily: 'Poppins',
+                                                      fontSize: 18,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
                             ],
-                          ),
-                        ],
-                        if (_currentIndex > 0) ...[
-                          Text(
-                            "My",
-                            style: AppTheme.textTitle(context).copyWith(
-                              fontFamily: 'Poppins',
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          Text(
-                            menus[_currentIndex],
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTheme.textTitle(context).copyWith(
-                              fontFamily: 'Poppins',
-                              fontSize: 20,
-                              fontWeight: FontWeight.w300,
-                            ),
-                          ),
-                          Text(
-                            ".",
-                            style: AppTheme.textTitleActive(
-                              context,
-                            ).copyWith(fontFamily: 'Poppins', fontSize: 18),
-                          ),
-                        ],
+                            if (_currentIndex > 0) ...[
+                              Text(
+                                "My",
+                                style: AppTheme.textTitle(context).copyWith(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                menus[_currentIndex],
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTheme.textTitle(context).copyWith(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                              Text(
+                                ".",
+                                style: AppTheme.textTitleActive(
+                                  context,
+                                ).copyWith(fontFamily: 'Poppins', fontSize: 18),
+                              ),
+                            ],
 
-                        const Spacer(),
-                      ],
-                      if (_showSearchBar) ...[
-                        Expanded(
-                          child: TextFormField(
-                            controller: _searchController,
-                            focusNode: _searchFocusNode,
-                            autovalidateMode:
-                                AutovalidateMode.onUserInteraction,
-                            decoration: InputDecoration(
-                              labelText: "Search",
-                              hintText: "Search Here...",
-                              prefixIcon: const Icon(HugeIconsSolid.search01),
-                              counter: const SizedBox.shrink(),
-                              suffixIcon: _searchController.text.isNotEmpty
-                                  ? IconButton(
-                                      icon: const Icon(
-                                        HugeIconsStroke.cancel02,
-                                      ),
-                                      onPressed: () {
-                                        _searchController.clear();
-                                        ref
-                                                .read(
-                                                  searchQueryProvider.notifier,
-                                                )
-                                                .state =
-                                            "";
-                                        setState(() {});
-                                      },
-                                    )
-                                  : null,
+                            const Spacer(),
+                          ],
+                          if (_showSearchBar) ...[
+                            Expanded(
+                              child: TextFormField(
+                                controller: _searchController,
+                                focusNode: _searchFocusNode,
+                                autovalidateMode:
+                                    AutovalidateMode.onUserInteraction,
+                                decoration: InputDecoration(
+                                  labelText: "Search",
+                                  hintText: "Search Here...",
+                                  prefixIcon: const Icon(HugeIconsSolid.search01),
+                                  counter: const SizedBox.shrink(),
+                                  suffixIcon: _searchController.text.isNotEmpty
+                                      ? IconButton(
+                                          icon: const Icon(
+                                            HugeIconsStroke.cancel02,
+                                          ),
+                                          onPressed: () {
+                                            _searchController.clear();
+                                            ref
+                                                    .read(
+                                                      searchQueryProvider.notifier,
+                                                    )
+                                                    .state =
+                                                "";
+                                            setState(() {});
+                                          },
+                                        )
+                                      : null,
+                                ),
+                                keyboardType: TextInputType.name,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return null;
+                                  } else if (!RegExp(
+                                    r'^[a-zA-Z0-9 ]+$',
+                                  ).hasMatch(value)) {
+                                    return 'Must contain only letters or digits';
+                                  }
+                                  return null;
+                                },
+                                maxLength: 20,
+                                onChanged: (value) {
+                                  ref.read(searchQueryProvider.notifier).state =
+                                      value;
+                                  setState(() {});
+                                },
+                              ),
                             ),
-                            keyboardType: TextInputType.name,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return null;
-                              } else if (!RegExp(
-                                r'^[a-zA-Z0-9 ]+$',
-                              ).hasMatch(value)) {
-                                return 'Must contain only letters or digits';
-                              }
-                              return null;
-                            },
-                            maxLength: 20,
-                            onChanged: (value) {
-                              ref.read(searchQueryProvider.notifier).state =
-                                  value;
-                              setState(() {});
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                      ],
-                      if (_currentIndex > 0 && _currentIndex < 3)
-                        InkWell(
-                          onTap: () {
-                            setState(() {
-                              _showSearchBar = !_showSearchBar;
-                              if (_showSearchBar) {
-                                Future.delayed(
-                                  const Duration(milliseconds: 50),
-                                  () {
-                                    _searchFocusNode.requestFocus();
-                                  },
-                                );
-                              } else {
-                                _searchController.clear();
-                                ref.read(searchQueryProvider.notifier).state =
-                                    "";
-                              }
-                            });
-                          },
-                          child: Icon(
-                            _showSearchBar
-                                ? HugeIconsStroke.cancel02
-                                : HugeIconsSolid.search01,
-                            color: AppTheme.iconColor(context),
-                            size: 24,
-                          ),
-                        ),
-                      if (!_showSearchBar) ...[
-                        const SizedBox(width: 8),
-                        const AnimatedNotificationBell(),
-                        const SizedBox(width: 8),
-                        InkWell(
-                          onTap: () {
-                            DialogLogout().showDialog(context, _logout);
-                          },
-                          child: Icon(
-                            HugeIconsStroke.logout02,
-                            color: AppTheme.iconColor(context),
-                            size: 24,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                            const SizedBox(width: 16),
+                          ],
+                          if (_currentIndex > 0 && _currentIndex < 3)
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _showSearchBar = !_showSearchBar;
+                                  if (_showSearchBar) {
+                                    Future.delayed(
+                                      const Duration(milliseconds: 50),
+                                      () {
+                                        _searchFocusNode.requestFocus();
+                                      },
+                                    );
+                                  } else {
+                                    _searchController.clear();
+                                    ref.read(searchQueryProvider.notifier).state =
+                                        "";
+                                  }
+                                });
+                              },
+                              child: Icon(
+                                _showSearchBar
+                                    ? HugeIconsStroke.cancel02
+                                    : HugeIconsSolid.search01,
+                                color: AppTheme.iconColor(context),
+                                size: 24,
+                              ),
+                            ),
+                          if (!_showSearchBar) ...[
+                            const SizedBox(width: 8),
+                            const AnimatedNotificationBell(),
+                            const SizedBox(width: 8),
+                            InkWell(
+                              onTap: () {
+                                DialogLogout().showDialog(context, _logout);
+                              },
+                              child: Icon(
+                                HugeIconsStroke.logout02,
+                                color: AppTheme.iconColor(context),
+                                size: 24,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
           body: user == null && userModel == null
               ? const Center(child: LoadingLogo())
-              : IndexedStack(index: _currentIndex, children: pages),
-          bottomNavigationBar: BottomNavigationBar(
-            currentIndex: _currentIndex,
-            onTap: (index) {
-              closeSearchBar();
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-            elevation: 0,
-            iconSize: 24,
-            landscapeLayout: BottomNavigationBarLandscapeLayout.centered,
-            selectedLabelStyle: AppTheme.textLabel(
-              context,
-            ).copyWith(fontSize: 12),
-            unselectedLabelStyle: AppTheme.textLabel(
-              context,
-            ).copyWith(fontSize: 11),
-            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-            selectedItemColor: AppTheme.onBoardingDotActive(context),
-            unselectedItemColor: AppTheme.onBoardingDot(context),
-            type: BottomNavigationBarType.fixed,
-            items: [
-              BottomNavigationBarItem(
-                icon: const Icon(HugeIconsStroke.home11),
-                activeIcon: const Icon(HugeIconsSolid.home11),
-                label: menus[0],
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(
-                  role == 'staff'
-                      ? HugeIconsStroke.truck
-                      : (role == 'admin'
+              : SlideTransition(
+                  position: _bodySlideAnimation,
+                  child: IndexedStack(
+                    index: _currentIndex,
+                    children: pages,
+                  ),
+                ),
+          bottomNavigationBar: SlideTransition(
+            position: _bottomNavSlideAnimation,
+            child: BottomNavigationBar(
+              currentIndex: _currentIndex,
+              onTap: (index) {
+                closeSearchBar();
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
+              elevation: 0,
+              iconSize: 24,
+              landscapeLayout: BottomNavigationBarLandscapeLayout.centered,
+              selectedLabelStyle: AppTheme.textLabel(
+                context,
+              ).copyWith(fontSize: 12),
+              unselectedLabelStyle: AppTheme.textLabel(
+                context,
+              ).copyWith(fontSize: 11),
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              selectedItemColor: AppTheme.onBoardingDotActive(context),
+              unselectedItemColor: AppTheme.onBoardingDot(context),
+              type: BottomNavigationBarType.fixed,
+              items: [
+                BottomNavigationBarItem(
+                  icon: const Icon(HugeIconsStroke.home11),
+                  activeIcon: const Icon(HugeIconsSolid.home11),
+                  label: menus[0],
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(
+                    role == 'staff'
+                        ? HugeIconsStroke.truck
+                        : (role == 'admin'
                             ? HugeIconsStroke.userGroup
                             : HugeIconsStroke.calendar01),
-                ),
-                activeIcon: Icon(
-                  role == 'staff'
-                      ? HugeIconsSolid.truck
-                      : (role == 'admin'
+                  ),
+                  activeIcon: Icon(
+                    role == 'staff'
+                        ? HugeIconsSolid.truck
+                        : (role == 'admin'
                             ? HugeIconsSolid.userGroup
                             : HugeIconsSolid.calendar01),
+                  ),
+                  label: menus[1],
                 ),
-                label: menus[1],
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(
-                  role == 'staff'
-                      ? HugeIconsStroke.userMultiple02
-                      : (role == 'admin'
+                BottomNavigationBarItem(
+                  icon: Icon(
+                    role == 'staff'
+                        ? HugeIconsStroke.userMultiple02
+                        : (role == 'admin'
                             ? HugeIconsStroke.crown03
                             : HugeIconsStroke.invoice01),
-                ),
-                activeIcon: Icon(
-                  role == 'staff'
-                      ? HugeIconsSolid.userMultiple02
-                      : (role == 'admin'
+                  ),
+                  activeIcon: Icon(
+                    role == 'staff'
+                        ? HugeIconsSolid.userMultiple02
+                        : (role == 'admin'
                             ? HugeIconsSolid.crown03
                             : HugeIconsSolid.invoice01),
+                  ),
+                  label: menus[2],
                 ),
-                label: menus[2],
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(HugeIconsStroke.user03),
-                activeIcon: const Icon(HugeIconsSolid.user03),
-                label: menus[3],
-              ),
-            ],
+                BottomNavigationBarItem(
+                  icon: const Icon(HugeIconsStroke.user03),
+                  activeIcon: const Icon(HugeIconsSolid.user03),
+                  label: menus[3],
+                ),
+              ],
+            ),
           ),
         ),
         borderRadius: 24.0,
@@ -450,17 +553,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         closeCurve: Curves.easeInBack,
       ),
     );
+
     return LayoutBuilder(
       builder: (context, constraints) {
+        final animatedApp = FadeTransition(
+          opacity: _fadeAnimation,
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: child,
+          ),
+        );
+
         if (constraints.maxWidth > 500) {
           return Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 500),
-              child: child,
+              child: animatedApp,
             ),
           );
         } else {
-          return child;
+          return animatedApp;
         }
       },
     );

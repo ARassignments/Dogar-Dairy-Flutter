@@ -192,11 +192,16 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
   }
 
   Future<void> _launchWhatsApp(String phone, String message) async {
-    String clean = phone.replaceAll("+", "").replaceAll(" ", "").replaceAll("-", "");
+    String clean = phone
+        .replaceAll("+", "")
+        .replaceAll(" ", "")
+        .replaceAll("-", "");
     if (clean.startsWith("0")) {
       clean = "92${clean.substring(1)}";
     }
-    final Uri url = Uri.parse("https://wa.me/$clean?text=${Uri.encodeComponent(message)}");
+    final Uri url = Uri.parse(
+      "https://wa.me/$clean?text=${Uri.encodeComponent(message)}",
+    );
     try {
       if (await canLaunchUrl(url)) {
         await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -241,7 +246,9 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
           backgroundColor: AppTheme.cardBg(context),
           title: Text(
             "Add Extra Milk Liters",
@@ -253,9 +260,9 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
             children: [
               Text(
                 "Customer: ${item.customerName}",
-                style: AppTheme.textLabel(context).copyWith(
-                  fontFamily: AppFontFamily.poppinsSemiBold,
-                ),
+                style: AppTheme.textLabel(
+                  context,
+                ).copyWith(fontFamily: AppFontFamily.poppinsSemiBold),
               ),
               const SizedBox(height: 4),
               Text(
@@ -265,7 +272,9 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
               const SizedBox(height: 16),
               TextFormField(
                 controller: controller,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: "Extra Liters to Add",
                   suffixText: "Liters",
@@ -277,18 +286,25 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text("Cancel", style: TextStyle(color: AppTheme.iconColorThree(context))),
+              child: Text(
+                "Cancel",
+                style: TextStyle(color: AppTheme.iconColorThree(context)),
+              ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColor.primary_50,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               onPressed: () {
                 final extra = double.tryParse(controller.text.trim()) ?? 0.0;
                 if (extra > 0) {
                   setState(() {
-                    final index = _deliveries.indexWhere((d) => d.id == item.id);
+                    final index = _deliveries.indexWhere(
+                      (d) => d.id == item.id,
+                    );
                     if (index != -1) {
                       final current = _deliveries[index];
                       _deliveries[index] = current.copyWith(
@@ -306,7 +322,10 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
                   );
                 }
               },
-              child: const Text("Confirm Extra", style: TextStyle(color: Colors.white)),
+              child: const Text(
+                "Confirm Extra",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -351,17 +370,20 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
     super.build(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final userModel = ref.watch(userProvider);
-    final role = (userModel?.role.isNotEmpty == true ? userModel!.role : "customer")
-        .toLowerCase();
+    final role =
+        (userModel?.role.isNotEmpty == true ? userModel!.role : "customer")
+            .toLowerCase();
     final searchQuery = ref.watch(searchQueryProvider).trim().toLowerCase();
 
     // Filter deliveries
     final currentDeliveries = _deliveries.where((d) {
       final matchesSlot = d.slot == _selectedSlot;
       final matchesRoute = role != 'staff' || d.route == _selectedRoute;
-      final matchesStatus = _selectedStatusFilter == "All" ||
+      final matchesStatus =
+          _selectedStatusFilter == "All" ||
           d.status.toLowerCase() == _selectedStatusFilter.toLowerCase();
-      final matchesSearch = searchQuery.isEmpty ||
+      final matchesSearch =
+          searchQuery.isEmpty ||
           d.customerName.toLowerCase().contains(searchQuery) ||
           d.address.toLowerCase().contains(searchQuery) ||
           d.customerPhone.contains(searchQuery);
@@ -449,10 +471,12 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
             itemCount: days.length,
             itemBuilder: (context, index) {
               final date = days[index];
-              final isSelected = date.year == _selectedDate.year &&
+              final isSelected =
+                  date.year == _selectedDate.year &&
                   date.month == _selectedDate.month &&
                   date.day == _selectedDate.day;
-              final isToday = date.year == now.year &&
+              final isToday =
+                  date.year == now.year &&
                   date.month == now.month &&
                   date.day == now.day;
 
@@ -467,15 +491,15 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
                       color: isSelected
                           ? AppColor.primary_50
                           : (isToday
-                              ? AppColor.primary_50.withValues(alpha: 0.12)
-                              : AppTheme.cardBg(context)),
+                                ? AppColor.primary_50.withValues(alpha: 0.12)
+                                : AppTheme.cardBg(context)),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: isSelected
                             ? AppColor.primary_50
                             : (isToday
-                                ? AppColor.primary_50.withValues(alpha: 0.4)
-                                : AppTheme.dividerBg(context)),
+                                  ? AppColor.primary_50.withValues(alpha: 0.4)
+                                  : AppTheme.dividerBg(context)),
                       ),
                     ),
                     child: Column(
@@ -500,8 +524,8 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
                             color: isSelected
                                 ? Colors.white
                                 : (isToday
-                                    ? AppColor.primary_50
-                                    : AppTheme.iconColor(context)),
+                                      ? AppColor.primary_50
+                                      : AppTheme.iconColor(context)),
                           ),
                         ),
                       ],
@@ -518,8 +542,18 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
 
   String _getMonthName(int month) {
     const months = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
     return months[month - 1];
   }
@@ -540,7 +574,7 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
             child: _buildSlotTab(
               title: "Morning Dispatch (AM)",
               subtitle: "6:00 AM – 8:30 AM",
-              icon: HugeIconsStroke.sun02,
+              icon: HugeIconsStroke.sun01,
               isSelected: _selectedSlot == "morning",
               onTap: () => setState(() => _selectedSlot = "morning"),
             ),
@@ -583,7 +617,9 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
                 Icon(
                   icon,
                   size: 14,
-                  color: isSelected ? Colors.white : AppColor.primary_50,
+                  color: isSelected
+                      ? Colors.white
+                      : AppTheme.iconColor(context),
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -591,7 +627,9 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
                   style: TextStyle(
                     fontFamily: AppFontFamily.poppinsSemiBold,
                     fontSize: 11,
-                    color: isSelected ? Colors.white : AppTheme.iconColor(context),
+                    color: isSelected
+                        ? Colors.white
+                        : AppTheme.iconColor(context),
                   ),
                 ),
               ],
@@ -602,7 +640,9 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
               style: TextStyle(
                 fontFamily: AppFontFamily.poppinsRegular,
                 fontSize: 9.5,
-                color: isSelected ? Colors.white70 : AppTheme.iconColorThree(context),
+                color: isSelected
+                    ? Colors.white70
+                    : AppTheme.iconColorThree(context),
               ),
             ),
           ],
@@ -641,14 +681,17 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
         children: [
           Row(
             children: [
-              const Icon(HugeIconsSolid.truck, color: AppColor.primary_50, size: 20),
+              const Icon(
+                HugeIconsSolid.truck,
+                color: AppColor.primary_50,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
                 "Vendor Route Controller",
-                style: AppTheme.textTitle(context).copyWith(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: AppTheme.textTitle(
+                  context,
+                ).copyWith(fontSize: 15, fontWeight: FontWeight.w700),
               ),
               const Spacer(),
               Container(
@@ -673,15 +716,23 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
           // Route dropdown
           DropdownButtonFormField<String>(
             initialValue: _selectedRoute,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: "Select Delivery Route",
               prefixIcon: Icon(HugeIconsStroke.route01, size: 20),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              filled: true,
+              fillColor: AppTheme.customListBg2(context),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
             ),
             items: _routes.map((r) {
               return DropdownMenuItem(
                 value: r,
-                child: Text(r, style: AppTheme.textLabel(context).copyWith(fontSize: 12.5)),
+                child: Text(
+                  r,
+                  style: AppTheme.textLabel(context).copyWith(fontSize: 12.5),
+                ),
               );
             }).toList(),
             onChanged: (val) {
@@ -696,8 +747,10 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 7,
-              backgroundColor: AppTheme.customListBg(context),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2E7D32)),
+              backgroundColor: AppTheme.customListBg2(context),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFF2E7D32),
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -705,9 +758,15 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
           // Total Volume Summary Row
           Row(
             children: [
-              _buildVolumePill("🥛 Buffalo: ${totalBuffalo.toStringAsFixed(1)} L", context),
+              _buildVolumePill(
+                "🥛 Buffalo: ${totalBuffalo.toStringAsFixed(1)} L",
+                context,
+              ),
               const SizedBox(width: 8),
-              _buildVolumePill("🐄 Cow: ${totalCow.toStringAsFixed(1)} L", context),
+              _buildVolumePill(
+                "🐄 Cow: ${totalCow.toStringAsFixed(1)} L",
+                context,
+              ),
             ],
           ),
         ],
@@ -720,7 +779,7 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
         decoration: BoxDecoration(
-          color: AppTheme.customListBg(context),
+          color: AppTheme.customListBg2(context),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Center(
@@ -760,7 +819,9 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
                 side: BorderSide(
-                  color: isSelected ? AppColor.primary_50 : AppTheme.dividerBg(context),
+                  color: isSelected
+                      ? AppColor.primary_50
+                      : AppTheme.dividerBg(context),
                 ),
               ),
               onSelected: (_) => setState(() => _selectedStatusFilter = filter),
@@ -782,11 +843,21 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
         child: Center(
           child: Column(
             children: [
-              Icon(HugeIconsStroke.milkBottle, size: 40, color: AppTheme.iconColorThree(context)),
+              Icon(
+                HugeIconsStroke.milkBottle,
+                size: 40,
+                color: AppTheme.iconColorThree(context),
+              ),
               const SizedBox(height: 10),
-              Text("No delivery stops found", style: AppTheme.textLabel(context)),
+              Text(
+                "No delivery stops found",
+                style: AppTheme.textLabel(context),
+              ),
               const SizedBox(height: 4),
-              Text("Try another route or status filter", style: AppTheme.textSearchInfoLabeled(context)),
+              Text(
+                "Try another route or status filter",
+                style: AppTheme.textSearchInfoLabeled(context),
+              ),
             ],
           ),
         ),
@@ -798,10 +869,9 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
       children: [
         Text(
           "Customer Delivery Drops (${items.length})",
-          style: AppTheme.textLabel(context).copyWith(
-            fontFamily: AppFontFamily.poppinsSemiBold,
-            fontSize: 13,
-          ),
+          style: AppTheme.textLabel(
+            context,
+          ).copyWith(fontFamily: AppFontFamily.poppinsSemiBold, fontSize: 13),
         ),
         const SizedBox(height: 10),
         ...items.map((item) => _buildVendorStopCard(context, isDark, item)),
@@ -827,8 +897,8 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
           color: isDelivered
               ? const Color(0xFF2E7D32).withValues(alpha: 0.3)
               : (isPaused
-                  ? Colors.grey.withValues(alpha: 0.3)
-                  : AppTheme.dividerBg(context)),
+                    ? Colors.grey.withValues(alpha: 0.3)
+                    : AppTheme.dividerBg(context)),
         ),
       ),
       child: Column(
@@ -851,9 +921,9 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
                     const SizedBox(height: 2),
                     Text(
                       item.address,
-                      style: AppTheme.textSearchInfoLabeled(context).copyWith(
-                        fontSize: 11.5,
-                      ),
+                      style: AppTheme.textSearchInfoLabeled(
+                        context,
+                      ).copyWith(fontSize: 11.5),
                     ),
                   ],
                 ),
@@ -875,7 +945,11 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
               children: [
                 Row(
                   children: [
-                    const Icon(HugeIconsSolid.milkBottle, size: 14, color: AppColor.primary_50),
+                    const Icon(
+                      HugeIconsSolid.milkBottle,
+                      size: 14,
+                      color: AppColor.primary_50,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       "Buffalo: ${item.buffaloLiters} L  •  Cow: ${item.cowLiters} L",
@@ -913,7 +987,11 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(HugeIconsStroke.note, size: 12, color: AppTheme.iconColorThree(context)),
+                Icon(
+                  HugeIconsStroke.note,
+                  size: 12,
+                  color: AppTheme.iconColorThree(context),
+                ),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
@@ -940,10 +1018,19 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2E7D32),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
-                  icon: const Icon(HugeIconsSolid.checkmarkCircle02, size: 14, color: Colors.white),
+                  icon: const Icon(
+                    HugeIconsSolid.checkmarkCircle02,
+                    size: 14,
+                    color: Colors.white,
+                  ),
                   label: const Text(
                     "Mark Delivered",
                     style: TextStyle(
@@ -957,20 +1044,32 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
                 const SizedBox(width: 8),
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   icon: const Icon(HugeIconsStroke.addCircle, size: 14),
                   label: const Text(
                     "+ Extra",
-                    style: TextStyle(fontFamily: AppFontFamily.poppinsMedium, fontSize: 11),
+                    style: TextStyle(
+                      fontFamily: AppFontFamily.poppinsMedium,
+                      fontSize: 11,
+                    ),
                   ),
                   onPressed: () => _showAddExtraLitersDialog(item),
                 ),
               ] else if (isDelivered) ...[
                 Row(
                   children: [
-                    const Icon(HugeIconsSolid.checkmarkBadge02, size: 14, color: Color(0xFF2E7D32)),
+                    const Icon(
+                      HugeIconsSolid.checkmarkBadge02,
+                      size: 14,
+                      color: Color(0xFF2E7D32),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       "Delivered at ${item.deliveredAt?.hour ?? 7}:${(item.deliveredAt?.minute ?? 15).toString().padLeft(2, '0')}",
@@ -1043,17 +1142,26 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   children: [
-                    const Icon(HugeIconsSolid.sun02, size: 12, color: Colors.white),
+                    const Icon(
+                      HugeIconsSolid.sun02,
+                      size: 12,
+                      color: Colors.white,
+                    ),
                     const SizedBox(width: 4),
                     Text(
-                      _selectedSlot == "morning" ? "Morning Route" : "Evening Route",
+                      _selectedSlot == "morning"
+                          ? "Morning Route"
+                          : "Evening Route",
                       style: const TextStyle(
                         fontFamily: AppFontFamily.poppinsMedium,
                         fontSize: 11,
@@ -1064,14 +1172,21 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF2E7D32),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Row(
                   children: [
-                    Icon(HugeIconsSolid.checkmarkBadge02, size: 12, color: Colors.white),
+                    Icon(
+                      HugeIconsSolid.checkmarkBadge02,
+                      size: 12,
+                      color: Colors.white,
+                    ),
                     SizedBox(width: 4),
                     Text(
                       "Delivered (7:15 AM)",
@@ -1158,7 +1273,11 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
                         color: const Color(0xFF2E7D32).withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(HugeIconsSolid.checkmarkBadge02, size: 16, color: Color(0xFF2E7D32)),
+                      child: const Icon(
+                        HugeIconsSolid.checkmarkBadge02,
+                        size: 16,
+                        color: Color(0xFF2E7D32),
+                      ),
                     ),
                     const SizedBox(width: 6),
                     Text(
@@ -1181,7 +1300,9 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
                 ),
                 Text(
                   "7.2% Fat • Grade A+",
-                  style: AppTheme.textSearchInfoLabeled(context).copyWith(fontSize: 11),
+                  style: AppTheme.textSearchInfoLabeled(
+                    context,
+                  ).copyWith(fontSize: 11),
                 ),
               ],
             ),
@@ -1209,7 +1330,11 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
                         color: AppColor.primary_50.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(HugeIconsSolid.deliveryTruck02, size: 16, color: AppColor.primary_50),
+                      child: const Icon(
+                        HugeIconsSolid.deliveryTruck02,
+                        size: 16,
+                        color: AppColor.primary_50,
+                      ),
                     ),
                     const SizedBox(width: 6),
                     Text(
@@ -1234,7 +1359,11 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
                   children: [
                     InkWell(
                       onTap: () => _launchCall("+923410292698"),
-                      child: const Icon(HugeIconsStroke.call02, size: 16, color: AppColor.primary_50),
+                      child: const Icon(
+                        HugeIconsStroke.call02,
+                        size: 16,
+                        color: AppColor.primary_50,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     InkWell(
@@ -1242,7 +1371,11 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
                         "+923410292698",
                         "Hello Rider Tariq! Regarding my Dogar Dairy milk delivery...",
                       ),
-                      child: const Icon(HugeIconsSolid.message02, size: 16, color: Color(0xFF25D366)),
+                      child: const Icon(
+                        HugeIconsSolid.message02,
+                        size: 16,
+                        color: Color(0xFF25D366),
+                      ),
                     ),
                   ],
                 ),
@@ -1267,14 +1400,17 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
         children: [
           Row(
             children: [
-              const Icon(HugeIconsStroke.calendar01, size: 18, color: AppColor.primary_50),
+              const Icon(
+                HugeIconsStroke.calendar01,
+                size: 18,
+                color: AppColor.primary_50,
+              ),
               const SizedBox(width: 8),
               Text(
                 "Quick Delivery Actions",
-                style: AppTheme.textTitle(context).copyWith(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: AppTheme.textTitle(
+                  context,
+                ).copyWith(fontSize: 14, fontWeight: FontWeight.w700),
               ),
             ],
           ),
@@ -1284,13 +1420,21 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
               Expanded(
                 child: OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 8,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                   icon: const Icon(HugeIconsStroke.pauseCircle, size: 16),
                   label: const Text(
                     "Pause Vacation",
-                    style: TextStyle(fontFamily: AppFontFamily.poppinsMedium, fontSize: 11.5),
+                    style: TextStyle(
+                      fontFamily: AppFontFamily.poppinsMedium,
+                      fontSize: 11.5,
+                    ),
                   ),
                   onPressed: _showPauseVacationModal,
                 ),
@@ -1300,10 +1444,19 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColor.primary_50,
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 8,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                  icon: const Icon(HugeIconsSolid.addCircle, size: 16, color: Colors.white),
+                  icon: const Icon(
+                    HugeIconsSolid.addCircle,
+                    size: 16,
+                    color: Colors.white,
+                  ),
                   label: const Text(
                     "Request Extra",
                     style: TextStyle(
@@ -1336,10 +1489,9 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
       children: [
         Text(
           "Delivery Logs & Drop History",
-          style: AppTheme.textLabel(context).copyWith(
-            fontFamily: AppFontFamily.poppinsSemiBold,
-            fontSize: 13,
-          ),
+          style: AppTheme.textLabel(
+            context,
+          ).copyWith(fontFamily: AppFontFamily.poppinsSemiBold, fontSize: 13),
         ),
         const SizedBox(height: 10),
         ..._deliveries.take(4).map((d) {
@@ -1359,7 +1511,11 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
                     color: AppColor.primary_50.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(HugeIconsSolid.milkBottle, color: AppColor.primary_50, size: 20),
+                  child: const Icon(
+                    HugeIconsSolid.milkBottle,
+                    color: AppColor.primary_50,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -1376,7 +1532,9 @@ class _DeliveriesScreenState extends ConsumerState<DeliveriesScreen>
                       const SizedBox(height: 2),
                       Text(
                         "${d.date.day} ${_getMonthName(d.date.month)} • ${d.lactometerScore}",
-                        style: AppTheme.textSearchInfoLabeled(context).copyWith(fontSize: 11),
+                        style: AppTheme.textSearchInfoLabeled(
+                          context,
+                        ).copyWith(fontSize: 11),
                       ),
                     ],
                   ),

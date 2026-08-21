@@ -256,6 +256,12 @@ class AppTheme {
         ? AppColor.neutral_90
         : AppColor.neutral_5;
   }
+  
+  static Color customListBg2(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? AppColor.neutral_90
+        : AppColor.white;
+  }
 
   static String appLogo(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark
