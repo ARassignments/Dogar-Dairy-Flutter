@@ -57,7 +57,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     _loadSession();
     _searchController.addListener(() {
       final query = _searchController.text.trim();
-      ref.read(searchQueryProvider.notifier).state = query;
+      if (ref.read(searchQueryProvider) != query) {
+        ref.read(searchQueryProvider.notifier).state = query;
+      }
     });
     pages = [
       HomeScreen(

@@ -1,5 +1,7 @@
-import 'dart:ui' show PointerDeviceKind;
+import 'dart:ui' show PlatformDispatcher, PointerDeviceKind;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,13 +12,40 @@ import '/theme/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 1. Crash Resilience: Catch and handle unhandled framework and async errors
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('App Global Error: ${details.exception}');
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('Async Unhandled Error: $error');
+    return true;
+  };
+
+  // 2. System UI orientation configuration
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  await ThemeController.loadTheme();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // 3. Parallelized critical startup tasks
+  await Future.wait([
+    ThemeController.loadTheme(),
+    Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
+  ]);
+
+  // 4. Enterprise-Scale Firestore offline persistence & unlimited caching
+  try {
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    );
+  } catch (e) {
+    debugPrint('Firestore settings note: $e');
+  }
+
   runApp(const ProviderScope(child: MainApp()));
 }
 

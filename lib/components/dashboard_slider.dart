@@ -1,6 +1,5 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '/models/slider_image_model.dart';
 import '/theme/theme.dart';
@@ -13,11 +12,10 @@ class DashboardSlider extends StatefulWidget {
 }
 
 class _DashboardSliderState extends State<DashboardSlider> {
-  bool _isLoading = false;
   final CarouselSliderController _carouselController =
       CarouselSliderController();
 
-  final List<SliderImageModel> sliderImages = [
+  final List<SliderImageModel> sliderImages = const [
     SliderImageModel(url: 'assets/images/sliders/1.png', isDartWatermark: true),
     SliderImageModel(url: 'assets/images/sliders/2.png', isDartWatermark: true),
     SliderImageModel(
@@ -29,50 +27,14 @@ class _DashboardSliderState extends State<DashboardSlider> {
   int _currentIndex = 0;
 
   @override
-  void initState() {
-    super.initState();
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() {
-        _isLoading = false;
-      });
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _isLoading ? _buildShimmerPlaceholder() : _buildImageCarousel(context),
+        _buildImageCarousel(context),
         const SizedBox(height: 12),
-        if (!_isLoading) _buildSmoothIndicator(context),
+        _buildSmoothIndicator(context),
         const SizedBox(height: 16),
       ],
-    );
-  }
-
-  /// 🟣 Shimmer Placeholder
-  Widget _buildShimmerPlaceholder() {
-    return Shimmer.fromColors(
-      baseColor: AppTheme.customListBg(context),
-      highlightColor: AppTheme.sliderHighlightBg(context),
-      child: CarouselSlider.builder(
-        itemCount: 1,
-        itemBuilder: (context, index, realIndex) {
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 8),
-            height: 200,
-            decoration: BoxDecoration(
-              color: AppTheme.customListBg(context),
-              borderRadius: BorderRadius.circular(12),
-            ),
-          );
-        },
-        options: CarouselOptions(
-          height: 200,
-          enlargeCenterPage: true,
-          viewportFraction: 0.9,
-        ),
-      ),
     );
   }
 

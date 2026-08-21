@@ -13,15 +13,22 @@ class SessionManager {
   static const String _genderKey = "USER_GENDER";
   static const String _onboardingCompletedKey = "ONBOARDING_COMPLETED";
 
+  static SharedPreferences? _prefs;
+
+  static Future<SharedPreferences> _getPrefs() async {
+    _prefs ??= await SharedPreferences.getInstance();
+    return _prefs!;
+  }
+
   /// Set onboarding completed flag
   static Future<void> setOnboardingCompleted(bool completed) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     await prefs.setBool(_onboardingCompletedKey, completed);
   }
 
   /// Get onboarding completed flag
   static Future<bool> isOnboardingCompleted() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     return prefs.getBool(_onboardingCompletedKey) ?? false;
   }
 
@@ -80,7 +87,7 @@ class SessionManager {
     bool rememberMe,
     String password,
   ) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     await prefs.setString(_userIdKey, userId);
 
     final cleanData = _cleanMap(user);
@@ -95,7 +102,7 @@ class SessionManager {
 
   /// Save avatar + gender (independent of API session)
   static Future<void> saveAvatarAndGender(String gender, String avatarPath) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     await prefs.setString(_avatarKey, avatarPath);
     await prefs.setString(_genderKey, gender);
     avatarNotifier.updateAvatar(avatarPath);
@@ -103,7 +110,7 @@ class SessionManager {
 
   /// Get avatar + gender
   static Future<Map<String, String?>> getAvatarAndGender() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     return {
       "gender": prefs.getString(_genderKey),
       "avatar": prefs.getString(_avatarKey),
@@ -112,13 +119,13 @@ class SessionManager {
 
   /// Get User Id
   static Future<String?> getUserId() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     return prefs.getString(_userIdKey);
   }
 
   /// Save or update user object in session
   static Future<void> saveUser(Map<String, dynamic> user) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     final cleanData = _cleanMap(user);
     final encodedUser = jsonEncode(
       cleanData,
@@ -129,7 +136,7 @@ class SessionManager {
 
   /// Get user object
   static Future<Map<String, dynamic>?> getUser() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     final userString = prefs.getString(_userKey);
     if (userString != null) {
       return jsonDecode(userString);
@@ -139,25 +146,25 @@ class SessionManager {
 
   /// Get remember me flag
   static Future<bool> getRememberMe() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     return prefs.getBool(_rememberMeKey) ?? false;
   }
 
    /// Get user password
   static Future<String?> getUserPassword() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     return prefs.getString(_userPasswordKey);
   }
 
   /// Get organization id
   static Future<int?> getOrganizationId() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     return prefs.getInt(_organizationIdKey);
   }
 
   /// Clear session
   static Future<void> clearSession() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _getPrefs();
     await prefs.remove(_userIdKey);
     await prefs.remove(_userKey);
     await prefs.remove(_rememberMeKey);

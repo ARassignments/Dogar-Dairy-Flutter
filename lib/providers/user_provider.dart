@@ -20,10 +20,23 @@ class UserNotifier extends StateNotifier<UserModel?> {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
 
+    // 1. Instant Cache-First Read (0ms latency)
+    try {
+      final cacheDoc = await _firestore
+          .collection('Users')
+          .doc(uid)
+          .get(const GetOptions(source: Source.cache));
+      final cacheData = cacheDoc.data();
+      if (cacheData != null && mounted) {
+        state = UserModel.fromMap(cacheData, uid);
+      }
+    } catch (_) {}
+
+    // 2. Server Sync in Background
     try {
       final doc = await _firestore.collection('Users').doc(uid).get();
       final data = doc.data();
-      if (data != null) {
+      if (data != null && mounted) {
         state = UserModel.fromMap(data, uid);
       }
     } catch (e) {
