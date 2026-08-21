@@ -1,22 +1,37 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '/components/dashboard_metric_cards.dart';
 import '/components/dashboard_slider.dart';
+import '/providers/user_provider.dart';
+import '/screens/help_center_screen.dart';
 import '/theme/theme.dart';
-import 'package:flutter/material.dart';
+import '/utils/session_manager.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   final Function(int) onMenuSelect;
   const HomeScreen({super.key, required this.onMenuSelect});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
+class _HomeScreenState extends ConsumerState<HomeScreen>
     with AutomaticKeepAliveClientMixin {
-  bool _hover = false;
+  String _cachedRole = 'customer';
+
   @override
   void initState() {
     super.initState();
+    _loadCachedRole();
+  }
+
+  Future<void> _loadCachedRole() async {
+    final user = await SessionManager.getUser();
+    if (user != null && user['role'] != null && mounted) {
+      setState(() {
+        _cachedRole = user['role'].toString().toLowerCase();
+      });
+    }
   }
 
   @override
@@ -25,21 +40,25 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final role = 'customer';
+    final user = ref.watch(userProvider);
+    final role = (user?.role.isNotEmpty == true ? user!.role : _cachedRole).toLowerCase();
+
     return SafeArea(
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            DashboardSlider(),
+            const DashboardSlider(),
             const SizedBox(height: 8),
             DashboardMetricCards(role: role),
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Text(
-                "Need Help?",
+                role == 'staff'
+                    ? "Vendor Actions"
+                    : (role == 'admin' ? "Platform Quick Links" : "Need Help?"),
                 style: AppTheme.textLabel(context).copyWith(
                   fontSize: 14,
                   fontFamily: AppFontFamily.poppinsSemiBold,
@@ -49,12 +68,23 @@ class _HomeScreenState extends State<HomeScreen>
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
-                spacing: 16,
                 children: [
                   Expanded(
                     child: Opacity(
-                      opacity: 0.5,
+                      opacity: 0.9,
                       child: InkWell(
+                        onTap: () {
+                          if (role == 'staff') {
+                            widget.onMenuSelect(1); // Go to Customers / Orders
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const HelpCenterScreen(initialTabIndex: 0),
+                              ),
+                            );
+                          }
+                        },
                         child: Stack(
                           children: [
                             Container(
@@ -68,7 +98,9 @@ class _HomeScreenState extends State<HomeScreen>
                               child: Padding(
                                 padding: const EdgeInsets.all(16),
                                 child: Text(
-                                  "FAQs",
+                                  role == 'staff'
+                                      ? "Manage\nCustomers"
+                                      : "FAQs",
                                   style: AppTheme.textLink(context).copyWith(
                                     fontSize: 13,
                                     fontFamily: AppFontFamily.poppinsSemiBold,
@@ -89,10 +121,23 @@ class _HomeScreenState extends State<HomeScreen>
                       ),
                     ),
                   ),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Opacity(
-                      opacity: 0.5,
+                      opacity: 0.9,
                       child: InkWell(
+                        onTap: () {
+                          if (role == 'staff') {
+                            widget.onMenuSelect(2); // Go to Ledgers / Khata
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const HelpCenterScreen(initialTabIndex: 1),
+                              ),
+                            );
+                          }
+                        },
                         child: Stack(
                           children: [
                             Container(
@@ -106,7 +151,9 @@ class _HomeScreenState extends State<HomeScreen>
                               child: Padding(
                                 padding: const EdgeInsets.all(16),
                                 child: Text(
-                                  "Chat Now",
+                                  role == 'staff'
+                                      ? "Khata\nLedgers"
+                                      : "Support",
                                   style: AppTheme.textLink(context).copyWith(
                                     fontSize: 13,
                                     fontFamily: AppFontFamily.poppinsSemiBold,
@@ -130,15 +177,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ],
               ),
             ),
-            // Column(
-            //   children: [
-            //     Text("Welcome, ${user?["FullName"] ?? "Guest"}"),
-            //     Text("Email: ${user?["Email"] ?? "N/A"}"),
-            //     Text("Organization Id: ${user?["OrganizationId"] ?? "Unknown"}"),
-            //     Text("Token: ${token ?? "Not available"}"),
-            //   ],
-            // ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
           ],
         ),
       ),

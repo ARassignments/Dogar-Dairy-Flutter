@@ -379,13 +379,10 @@ class _SignupScreenState extends State<SignupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Hero(
-            tag: 'logo',
-            child: Image.asset(
-              AppTheme.appLogo(context),
-              height: 100,
-              width: 100,
-            ),
+          Image.asset(
+            AppTheme.appLogo(context),
+            height: 100,
+            width: 100,
           ),
           const SizedBox(height: 40),
           Text(
@@ -607,13 +604,10 @@ class _SignupScreenState extends State<SignupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Hero(
-            tag: 'logo',
-            child: Image.asset(
-              AppTheme.appLogo(context),
-              height: 100,
-              width: 100,
-            ),
+          Image.asset(
+            AppTheme.appLogo(context),
+            height: 100,
+            width: 100,
           ),
           const SizedBox(height: 40),
           Text(
@@ -823,13 +817,10 @@ class _SignupScreenState extends State<SignupScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Hero(
-            tag: 'logo',
-            child: Image.asset(
-              AppTheme.appLogo(context),
-              height: 100,
-              width: 100,
-            ),
+          Image.asset(
+            AppTheme.appLogo(context),
+            height: 100,
+            width: 100,
           ),
           const SizedBox(height: 40),
           Text(

@@ -4,13 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 import 'package:hugeicons_pro/hugeicons.dart';
 import '/providers/search_provider.dart';
+import '/providers/user_provider.dart';
 import '/components/animated_notification_bell.dart';
 import '/components/dialog_logout.dart';
 import '/components/menu_drawer.dart';
 import '/components/loading_screen.dart';
 import '/notifiers/avatar_notifier.dart';
 import '/screens/fragments/account_screen.dart';
+import '/screens/fragments/deliveries_screen.dart';
 import '/screens/fragments/home_screen.dart';
+import '/screens/fragments/khata_screen.dart';
 import '/screens/auth/login_screen.dart';
 import '/theme/theme.dart';
 import '/utils/session_manager.dart';
@@ -32,9 +35,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   bool _showSearchBar = false;
   final auth = FirebaseAuth.instance;
   final ZoomDrawerController _drawerController = ZoomDrawerController();
-  List<String> menus = ["Home", "Orders", "Ledgers", "Accounts"];
   late final List<Widget> pages;
+  final DeliveriesScreen deliveriesScreen = const DeliveriesScreen();
+  final KhataScreen khataScreen = const KhataScreen();
   final AccountScreen accountScreen = const AccountScreen();
+
+  List<String> _getRoleMenus(String role) {
+    final r = role.toLowerCase();
+    if (r == 'staff') {
+      return const ["Home", "Supply", "Ledgers", "Accounts"];
+    } else if (r == 'admin') {
+      return const ["Overview", "Vendors", "Plans", "Accounts"];
+    } else {
+      return const ["Home", "Deliveries", "Khata", "Accounts"];
+    }
+  }
 
   @override
   void initState() {
@@ -52,8 +67,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           });
         },
       ),
-      accountScreen,
-      accountScreen,
+      deliveriesScreen,
+      khataScreen,
       accountScreen,
     ];
   }
@@ -66,10 +81,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   Future<void> _loadSession() async {
     final userData = await SessionManager.getUser();
-    setState(() {
-      user = userData;
-      _isLoadingUser = false;
-    });
+    if (mounted) {
+      setState(() {
+        user = userData;
+        _isLoadingUser = false;
+      });
+    }
   }
 
   void closeSearchBar() {
@@ -87,7 +104,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
-          pageBuilder: (_, __, ___) => LoginScreen(),
+          pageBuilder: (_, __, ___) => const LoginScreen(),
           transitionsBuilder: (_, a, __, c) =>
               FadeTransition(opacity: a, child: c),
         ),
@@ -113,12 +130,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // final user = ref.watch(userProvider);
+    final userModel = ref.watch(userProvider);
+    final role =
+        (userModel?.role.isNotEmpty == true
+                ? userModel!.role
+                : (user?["role"] ?? 'customer'))
+            .toString()
+            .toLowerCase();
+    final menus = _getRoleMenus(role);
+
     Widget child = Scaffold(
       body: ZoomDrawer(
         controller: _drawerController,
         menuScreen: MenuDrawer(
           currentIndex: _currentIndex,
+          role: role,
           onItemSelected: (index) {
             closeSearchBar();
             setState(() => _currentIndex = index);
@@ -146,7 +172,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             size: 24,
                           ),
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         if (_currentIndex < 1) ...[
                           Row(
                             children: [
@@ -179,11 +205,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                     ),
                                   ),
                                   Text(
-                                    _currentIndex > 0
-                                        ? menus[_currentIndex]
-                                        : _isLoadingUser
+                                    _isLoadingUser
                                         ? ''
-                                        : user?["name"] ?? 'Unknown User',
+                                        : (userModel?.name.isNotEmpty == true
+                                              ? userModel!.name
+                                              : (user?["name"] ?? 'Vendor')),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: AppTheme.textTitle(context).copyWith(
@@ -206,12 +232,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           ),
                         ],
                         if (_currentIndex > 0) ...[
-                          Image.asset(
-                            AppTheme.appLogo(context),
-                            height: 120,
-                            width: 60,
-                          ),
-                          SizedBox(width: 10),
                           Text(
                             "My",
                             style: AppTheme.textTitle(context).copyWith(
@@ -250,7 +270,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             decoration: InputDecoration(
                               labelText: "Search",
                               hintText: "Search Here...",
-                              prefixIcon: Icon(HugeIconsSolid.search01),
+                              prefixIcon: const Icon(HugeIconsSolid.search01),
                               counter: const SizedBox.shrink(),
                               suffixIcon: _searchController.text.isNotEmpty
                                   ? IconButton(
@@ -297,9 +317,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             setState(() {
                               _showSearchBar = !_showSearchBar;
                               if (_showSearchBar) {
-                                Future.delayed(Duration(milliseconds: 50), () {
-                                  _searchFocusNode.requestFocus();
-                                });
+                                Future.delayed(
+                                  const Duration(milliseconds: 50),
+                                  () {
+                                    _searchFocusNode.requestFocus();
+                                  },
+                                );
                               } else {
                                 _searchController.clear();
                                 ref.read(searchQueryProvider.notifier).state =
@@ -335,17 +358,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
               ],
             ),
-            // actions: [
-            //   InkWell(
-            //     onTap: () {
-            //       DialogLogout().showDialog(context, _logout);
-            //     },
-            //     child: const Icon(HugeIconsStroke.logout02, size: 20),
-            //   ),
-            //   const SizedBox(width: 16),
-            // ],
           ),
-          body: user == null
+          body: user == null && userModel == null
               ? const Center(child: LoadingLogo())
               : IndexedStack(index: _currentIndex, children: pages),
           bottomNavigationBar: BottomNavigationBar(
@@ -371,24 +385,48 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             type: BottomNavigationBarType.fixed,
             items: [
               BottomNavigationBarItem(
-                icon: Icon(HugeIconsStroke.home11),
-                activeIcon: Icon(HugeIconsSolid.home11),
-                label: "Home",
+                icon: const Icon(HugeIconsStroke.home11),
+                activeIcon: const Icon(HugeIconsSolid.home11),
+                label: menus[0],
               ),
               BottomNavigationBarItem(
-                icon: Icon(HugeIconsStroke.home11),
-                activeIcon: Icon(HugeIconsSolid.home11),
-                label: "Home",
+                icon: Icon(
+                  role == 'staff'
+                      ? HugeIconsStroke.truck
+                      : (role == 'admin'
+                            ? HugeIconsStroke.userGroup
+                            : HugeIconsStroke.calendar01),
+                ),
+                activeIcon: Icon(
+                  role == 'staff'
+                      ? HugeIconsSolid.truck
+                      : (role == 'admin'
+                            ? HugeIconsSolid.userGroup
+                            : HugeIconsSolid.calendar01),
+                ),
+                label: menus[1],
               ),
               BottomNavigationBarItem(
-                icon: Icon(HugeIconsStroke.userMultiple02),
-                activeIcon: Icon(HugeIconsSolid.userMultiple02),
-                label: "Ledgers",
+                icon: Icon(
+                  role == 'staff'
+                      ? HugeIconsStroke.userMultiple02
+                      : (role == 'admin'
+                            ? HugeIconsStroke.crown03
+                            : HugeIconsStroke.invoice01),
+                ),
+                activeIcon: Icon(
+                  role == 'staff'
+                      ? HugeIconsSolid.userMultiple02
+                      : (role == 'admin'
+                            ? HugeIconsSolid.crown03
+                            : HugeIconsSolid.invoice01),
+                ),
+                label: menus[2],
               ),
               BottomNavigationBarItem(
-                icon: Icon(HugeIconsStroke.user03),
-                activeIcon: Icon(HugeIconsSolid.user03),
-                label: "Accounts",
+                icon: const Icon(HugeIconsStroke.user03),
+                activeIcon: const Icon(HugeIconsSolid.user03),
+                label: menus[3],
               ),
             ],
           ),
@@ -396,7 +434,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         borderRadius: 24.0,
         showShadow: true,
         angle: -8.0,
-        mainScreenScale: 0.05, // slightly more zoom-in effect
+        mainScreenScale: 0.05,
         shadowLayer1Color: AppTheme.customListBg(
           context,
         ).withValues(alpha: 0.5),
@@ -404,7 +442,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           context,
         ).withValues(alpha: 1.0),
         mainScreenTapClose: true,
-        // overlayBlur: 0.8,
         slideWidth: MediaQuery.of(context).size.width * 0.85,
         menuBackgroundColor: Colors.transparent,
         openCurve: Curves.fastOutSlowIn,

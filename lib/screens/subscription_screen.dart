@@ -1,24 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons_pro/hugeicons.dart';
+import '/providers/user_provider.dart';
 import '/theme/theme.dart';
+import '/utils/session_manager.dart';
 
-class SubscriptionScreen extends StatefulWidget {
+class SubscriptionScreen extends ConsumerStatefulWidget {
   const SubscriptionScreen({super.key});
 
   @override
-  State<SubscriptionScreen> createState() => _SubscriptionScreenState();
+  ConsumerState<SubscriptionScreen> createState() => _SubscriptionScreenState();
 }
 
-class _SubscriptionScreenState extends State<SubscriptionScreen>
+class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen>
     with TickerProviderStateMixin {
   late final List<AnimationController> _controllers;
   late final List<Animation<double>> _fadeAnims;
   late final List<Animation<Offset>> _slideAnims;
   int? _selectedPlan = 0;
+  String _cachedRole = 'customer';
 
   @override
   void initState() {
     super.initState();
+    _loadCachedRole();
     _controllers = List.generate(
       _plans.length,
       (i) => AnimationController(
@@ -46,6 +51,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     }
   }
 
+  Future<void> _loadCachedRole() async {
+    final user = await SessionManager.getUser();
+    if (user != null && user['role'] != null && mounted) {
+      setState(() {
+        _cachedRole = user['role'].toString().toLowerCase();
+      });
+    }
+  }
+
   @override
   void dispose() {
     for (final c in _controllers) {
@@ -56,6 +70,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
   @override
   Widget build(BuildContext context) {
+    final userModel = ref.watch(userProvider);
+    final role = (userModel?.role.isNotEmpty == true
+            ? userModel!.role
+            : _cachedRole)
+        .toLowerCase();
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -63,7 +83,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
         titleSpacing: 0,
         centerTitle: true,
         title: Text(
-          "Subscriptions",
+          role == 'staff' ? "Vendor SaaS Plans" : "Subscription & Billing",
           style: AppTheme.textTitle(context).copyWith(
             fontFamily: 'Poppins',
             fontSize: 20,
@@ -80,48 +100,70 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              // int crossAxisCount = constraints.maxWidth < 500
-              //     ? 1 // small screen → 1 cards per row
-              //     : 3; // large screen → 3 cards per row
               return Column(
                 children: [
-                  // Title
-                  _buildHeader(),
-                  const SizedBox(height: 36),
+                  // Customer Free Status Banner (if logged in as buyer)
+                  if (role == 'customer') ...[
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 24),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2E7D32).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: const Color(0xFF2E7D32).withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2E7D32),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              HugeIconsSolid.checkmarkBadge02,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Customer Account: 100% Free",
+                                  style: AppTheme.textTitle(context).copyWith(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF2E7D32),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "As a milk buyer, your daily delivery tracking, khata statements, and receipts are free forever. Plans below apply only to dairy vendors.",
+                                  style: AppTheme.textSearchInfoLabeled(context).copyWith(
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  // Title Header
+                  _buildHeader(role),
+                  const SizedBox(height: 28),
 
                   // Cards
-                  // GridView.builder(
-                  //   shrinkWrap: true,
-                  //   physics: const NeverScrollableScrollPhysics(),
-                  //   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  //     crossAxisCount: crossAxisCount,
-                  //     crossAxisSpacing: 20,
-                  //     mainAxisSpacing: 20,
-                  //     childAspectRatio: constraints.maxWidth < 500 ? 0.96 : 1.22,
-                  //   ),
-                  //   itemCount: _plans.length,
-                  //   itemBuilder: (context, index) {
-                  //     // final item = _plans[index];
-                  //     return FadeTransition(
-                  //       opacity: _fadeAnims[index],
-                  //       child: SlideTransition(
-                  //         position: _slideAnims[index],
-                  //         child: _PricingCard(
-                  //           plan: _plans[index],
-                  //           isSelected: _selectedPlan == index,
-                  //           onTap: () => setState(
-                  //             () => _selectedPlan = _selectedPlan == index
-                  //                 ? null
-                  //                 : index,
-                  //           ),
-                  //         ),
-                  //       ),
-                  //     );
-                  //   },
-                  // ),
                   ...List.generate(
                     _plans.length,
                     (i) => Padding(
@@ -151,35 +193,35 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(String role) {
     return Column(
       children: [
-        // Decorative line
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             _Dividerline(),
             const SizedBox(width: 12),
             Text(
-              'PRICING PLANS',
+              'VENDOR BUSINESS PLANS',
               style: TextStyle(
                 color: AppTheme.iconColor(context),
-                fontSize: 22,
+                fontSize: 18,
                 fontWeight: FontWeight.w800,
-                letterSpacing: 4,
+                letterSpacing: 2,
               ),
             ),
             const SizedBox(width: 12),
             _Dividerline(),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         Text(
-          'Choose the plan that grows with your business',
+          'Automate your milk supply, delivery routes, and digital leasures',
+          textAlign: TextAlign.center,
           style: TextStyle(
-            color: AppTheme.iconColor(context).withValues(alpha: 0.45),
+            color: AppTheme.iconColor(context).withValues(alpha: 0.55),
             fontSize: 13,
-            letterSpacing: 0.3,
+            letterSpacing: 0.2,
           ),
         ),
       ],
@@ -221,57 +263,49 @@ class _Plan {
 
 final List<_Plan> _plans = [
   _Plan(
-    name: 'Silver',
+    name: 'Starter Vendor',
     price: 'Rs 3,500',
     period: 'Per Month',
     accentColor: const Color(0xFFB39DDB),
     gradient: const [Color(0xFFCE93D8), Color(0xFF9FA8DA), Color(0xFF80DEEA)],
     features: [
-      const _PlanFeature('All Features', _FeatureType.check),
-      const _PlanFeature('Live Support Included', _FeatureType.check),
-      const _PlanFeature(
-        '+ Rs 10,000 (One-time Server Charges)',
-        _FeatureType.info,
-      ),
-      const _PlanFeature(
-        'Updates & New Modules = Extra Cost',
-        _FeatureType.warning,
-      ),
+      const _PlanFeature('Up to 50 Customers', _FeatureType.check),
+      const _PlanFeature('Daily Morning/Evening Delivery Routes', _FeatureType.check),
+      const _PlanFeature('Digital Khata & PDF Invoices', _FeatureType.check),
+      const _PlanFeature('WhatsApp Receipt Sharing', _FeatureType.check),
+      const _PlanFeature('Standard Customer Support', _FeatureType.check),
     ],
   ),
   _Plan(
-    name: 'Golden',
-    price: 'Rs 85,000',
-    period: 'One-Time',
+    name: 'Growth Vendor',
+    price: 'Rs 15,000',
+    period: 'Per 6 Months',
     accentColor: const Color(0xFFF48FB1),
     gradient: const [Color(0xFFF48FB1), Color(0xFFCE93D8), Color(0xFF90CAF9)],
     isPopular: true,
     badge: 'MOST POPULAR',
     features: [
-      const _PlanFeature('All Features', _FeatureType.check),
-      const _PlanFeature('Live Support Included', _FeatureType.check),
-      const _PlanFeature('Rs 10,000/Year (Server Charges)', _FeatureType.info),
-      const _PlanFeature(
-        'Updates & New Modules = Extra Cost',
-        _FeatureType.warning,
-      ),
+      const _PlanFeature('Up to 250 Customers', _FeatureType.check),
+      const _PlanFeature('Multiple Rider Delivery Routes', _FeatureType.check),
+      const _PlanFeature('Daily Milk Stock & Wastage Tracking', _FeatureType.check),
+      const _PlanFeature('Automated SMS & WhatsApp Due Alerts', _FeatureType.success),
+      const _PlanFeature('Monthly Financial Analytics & P&L', _FeatureType.check),
+      const _PlanFeature('Priority 24/7 Phone Support', _FeatureType.check),
     ],
   ),
   _Plan(
-    name: 'Platinum',
-    price: 'Rs 185,000',
-    period: 'One-Time',
+    name: 'Enterprise Vendor',
+    price: 'Rs 28,000',
+    period: 'Per Year',
     accentColor: const Color(0xFF80CBC4),
     gradient: const [Color(0xFF80DEEA), Color(0xFF80CBC4), Color(0xFFA5D6A7)],
     badge: 'BEST VALUE',
     features: [
-      const _PlanFeature('All Features', _FeatureType.check),
-      const _PlanFeature('Live Support Included', _FeatureType.check),
-      const _PlanFeature('No Extra Server Charges', _FeatureType.success),
-      const _PlanFeature(
-        'Updates & New Modules = Extra Cost',
-        _FeatureType.warning,
-      ),
+      const _PlanFeature('Unlimited Customers & Routes', _FeatureType.check),
+      const _PlanFeature('Multi-Branch Dairy Shop Inventory', _FeatureType.check),
+      const _PlanFeature('Custom Vendor Branding on PDF Bills', _FeatureType.success),
+      const _PlanFeature('Bulk Khata Ledger Import/Export', _FeatureType.check),
+      const _PlanFeature('Dedicated Account Manager', _FeatureType.check),
     ],
   ),
 ];

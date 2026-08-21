@@ -449,35 +449,42 @@ class _NotificationSettingsScreenState
                                         "Your morning milk delivery of 2.0L Buffalo Milk is on its way!",
                                   ),
                             loading: _isTesting,
-                            disabled: _isTesting,
+                            disabled: !isMasterEnabled,
                           ),
 
                           const SizedBox(height: 14),
 
                           // Quick Scenario Test Buttons
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              _buildQuickTestChip(
-                                label: "🚚 Delivery Arrival",
-                                title: "Rider Arriving Soon",
-                                message:
-                                    "Your dairy rider Muhammad Ali is 5 mins away.",
+                          AnimatedOpacity(
+                            opacity: isMasterEnabled ? 1.0 : 0.4,
+                            duration: const Duration(milliseconds: 300),
+                            child: IgnorePointer(
+                              ignoring: !isMasterEnabled,
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  _buildQuickTestChip(
+                                    label: "🚚 Delivery Arrival",
+                                    title: "Rider Arriving Soon",
+                                    message:
+                                        "Your dairy rider Muhammad Ali is 5 mins away.",
+                                  ),
+                                  _buildQuickTestChip(
+                                    label: "🧾 Payment Received",
+                                    title: "Khata Sync Confirmed",
+                                    message:
+                                        "Received Rs. 4,200 for August Billing. Thank you!",
+                                  ),
+                                  _buildQuickTestChip(
+                                    label: "🧈 20% Off Desi Ghee",
+                                    title: "Weekend Farm Offer",
+                                    message:
+                                        "Special discount on pure Desi Ghee & Fresh Butter.",
+                                  ),
+                                ],
                               ),
-                              _buildQuickTestChip(
-                                label: "🧾 Payment Received",
-                                title: "Khata Sync Confirmed",
-                                message:
-                                    "Received Rs. 4,200 for August Billing. Thank you!",
-                              ),
-                              _buildQuickTestChip(
-                                label: "🧈 20% Off Desi Ghee",
-                                title: "Weekend Farm Offer",
-                                message:
-                                    "Special discount on pure Desi Ghee & Fresh Butter.",
-                              ),
-                            ],
+                            ),
                           ),
                         ],
                       ),

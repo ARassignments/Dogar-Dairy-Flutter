@@ -1,11 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons_pro/hugeicons.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '/notifiers/avatar_notifier.dart';
-import '/components/appsnackbar.dart';
+import '/providers/notification_provider.dart';
+import '/providers/user_provider.dart';
 import '/components/dialog_logout.dart';
+import '/screens/about_screen.dart';
 import '/screens/auth/login_screen.dart';
+import '/screens/help_center_screen.dart';
+import '/screens/privacy_policy_screen.dart';
 import '/screens/profile_screen.dart';
 import '/screens/subscription_screen.dart';
 import '/settings/milk_type_settings.dart';
@@ -14,14 +18,14 @@ import '/settings/payment_methods_settings.dart';
 import '/theme/theme.dart';
 import '/utils/session_manager.dart';
 
-class AccountScreen extends StatefulWidget {
+class AccountScreen extends ConsumerStatefulWidget {
   const AccountScreen({super.key});
 
   @override
-  State<AccountScreen> createState() => _AccountScreenState();
+  ConsumerState<AccountScreen> createState() => _AccountScreenState();
 }
 
-class _AccountScreenState extends State<AccountScreen>
+class _AccountScreenState extends ConsumerState<AccountScreen>
     with AutomaticKeepAliveClientMixin {
   Map<String, dynamic>? user;
 
@@ -81,6 +85,7 @@ class _AccountScreenState extends State<AccountScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final notifState = ref.watch(notificationProvider);
     return SafeArea(
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
@@ -396,7 +401,12 @@ class _AccountScreenState extends State<AccountScreen>
                         horizontal: 16,
                         vertical: 8,
                       ),
-                      leading: Icon(HugeIconsStroke.notification01, size: 24),
+                      leading: Icon(
+                        notifState.isEnabled
+                            ? HugeIconsStroke.notification01
+                            : HugeIconsStroke.notificationOff01,
+                        size: 24,
+                      ),
                       title: Text(
                         "Notifications Settings",
                         style: AppTheme.textLabel(context),
@@ -433,15 +443,81 @@ class _AccountScreenState extends State<AccountScreen>
                       },
                     ),
                     Divider(height: 1, color: AppTheme.dividerBg(context)),
+                    Builder(
+                      builder: (context) {
+                        final userModel = ref.watch(userProvider);
+                        final role = (userModel?.role.isNotEmpty == true
+                                ? userModel!.role
+                                : (user?['role'] ?? 'customer'))
+                            .toString()
+                            .toLowerCase();
+                        return ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          leading: const Icon(HugeIconsStroke.crown03, size: 24),
+                          title: Text(
+                            "Subscription Plan",
+                            style: AppTheme.textLabel(context),
+                          ),
+                          subtitle: Text(
+                            role == 'staff'
+                                ? "Vendor SaaS Plan (Paid)"
+                                : (role == 'admin'
+                                    ? "Platform Operator"
+                                    : "Customer Plan (Free Forever)"),
+                            style: AppTheme.textSearchInfoLabeled(context)
+                                .copyWith(fontSize: 12),
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                opaque: false,
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        const SubscriptionScreen(),
+                                transitionsBuilder:
+                                    (
+                                      context,
+                                      animation,
+                                      secondaryAnimation,
+                                      child,
+                                    ) {
+                                      const begin = Offset(0.0, 1.0);
+                                      const end = Offset.zero;
+                                      const curve = Curves.easeInOut;
+                                      final tween = Tween(
+                                        begin: begin,
+                                        end: end,
+                                      ).chain(CurveTween(curve: curve));
+                                      return SlideTransition(
+                                        position: animation.drive(tween),
+                                        child: child,
+                                      );
+                                    },
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                    Divider(height: 1, color: AppTheme.dividerBg(context)),
                     ListTile(
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 8,
                       ),
-                      leading: Icon(HugeIconsStroke.crown03, size: 24),
+                      leading: const Icon(HugeIconsStroke.note, size: 24),
                       title: Text(
-                        "Subscription",
+                        "Privacy Policy",
                         style: AppTheme.textLabel(context),
+                      ),
+                      subtitle: Text(
+                        "Data protection, multi-tenant safety & khata privacy",
+                        style: AppTheme.textSearchInfoLabeled(context)
+                            .copyWith(fontSize: 12),
                       ),
                       onTap: () {
                         Navigator.push(
@@ -450,7 +526,7 @@ class _AccountScreenState extends State<AccountScreen>
                             opaque: false,
                             pageBuilder:
                                 (context, animation, secondaryAnimation) =>
-                                    SubscriptionScreen(),
+                                    const PrivacyPolicyScreen(),
                             transitionsBuilder:
                                 (
                                   context,
@@ -480,25 +556,46 @@ class _AccountScreenState extends State<AccountScreen>
                         horizontal: 16,
                         vertical: 8,
                       ),
-                      leading: Icon(HugeIconsStroke.note, size: 24),
-                      title: Text(
-                        "Privacy Policy",
-                        style: AppTheme.textLabel(context),
-                      ),
-                      onTap: () {},
-                    ),
-                    Divider(height: 1, color: AppTheme.dividerBg(context)),
-                    ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      leading: Icon(HugeIconsStroke.headset, size: 24),
+                      leading: const Icon(HugeIconsStroke.headset, size: 24),
                       title: Text(
                         "Help Center",
                         style: AppTheme.textLabel(context),
                       ),
-                      onTap: () {},
+                      subtitle: Text(
+                        "FAQs, delivery assistance & live support",
+                        style: AppTheme.textSearchInfoLabeled(context)
+                            .copyWith(fontSize: 12),
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          PageRouteBuilder(
+                            opaque: false,
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    const HelpCenterScreen(),
+                            transitionsBuilder:
+                                (
+                                  context,
+                                  animation,
+                                  secondaryAnimation,
+                                  child,
+                                ) {
+                                  const begin = Offset(0.0, 1.0);
+                                  const end = Offset.zero;
+                                  const curve = Curves.easeInOut;
+                                  final tween = Tween(
+                                    begin: begin,
+                                    end: end,
+                                  ).chain(CurveTween(curve: curve));
+                                  return SlideTransition(
+                                    position: animation.drive(tween),
+                                    child: child,
+                                  );
+                                },
+                          ),
+                        );
+                      },
                     ),
                     Divider(height: 1, color: AppTheme.dividerBg(context)),
                     ListTile(
@@ -506,7 +603,7 @@ class _AccountScreenState extends State<AccountScreen>
                         horizontal: 16,
                         vertical: 8,
                       ),
-                      leading: Icon(
+                      leading: const Icon(
                         HugeIconsStroke.chartBreakoutCircle,
                         size: 24,
                       ),
@@ -514,23 +611,40 @@ class _AccountScreenState extends State<AccountScreen>
                         "About Dogar Dairy",
                         style: AppTheme.textLabel(context),
                       ),
-                      onTap: () async {
-                        final Uri url = Uri.parse('https://y2ksolutions.com');
-                        if (await canLaunchUrl(url)) {
-                          await launchUrl(
-                            url,
-                            mode: LaunchMode
-                                .externalApplication, // opens in browser
-                          );
-                        } else {
-                          if (context.mounted) {
-                            AppSnackBar.show(
-                              context,
-                              message: "Could not open the website.",
-                              type: AppSnackBarType.error,
-                            );
-                          }
-                        }
+                      subtitle: Text(
+                        "Our mission, pure milk promise & company info",
+                        style: AppTheme.textSearchInfoLabeled(context)
+                            .copyWith(fontSize: 12),
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          PageRouteBuilder(
+                            opaque: false,
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    const AboutDogarDairyScreen(),
+                            transitionsBuilder:
+                                (
+                                  context,
+                                  animation,
+                                  secondaryAnimation,
+                                  child,
+                                ) {
+                                  const begin = Offset(0.0, 1.0);
+                                  const end = Offset.zero;
+                                  const curve = Curves.easeInOut;
+                                  final tween = Tween(
+                                    begin: begin,
+                                    end: end,
+                                  ).chain(CurveTween(curve: curve));
+                                  return SlideTransition(
+                                    position: animation.drive(tween),
+                                    child: child,
+                                  );
+                                },
+                          ),
+                        );
                       },
                     ),
                   ],

@@ -170,8 +170,7 @@ class _AnimatedNotificationBellState
                   child: Center(
                     child: Text(
                       unreadCount > 9 ? "9+" : "$unreadCount",
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: AppTheme.textLabel(context).copyWith(
                         fontSize: 9,
                         fontFamily: AppFontFamily.poppinsBold,
                         height: 1.1,

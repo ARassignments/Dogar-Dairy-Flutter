@@ -1,7 +1,57 @@
-rules_version='2'
+rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper function to verify user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to verify user UID matches
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Users collection: each authenticated user can read & update their own record
+    match /Users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+    }
+
+    // Multi-tenant vendor collections (Dairy Vendors / Staff)
+    match /Vendors/{vendorId} {
+      allow read, write: if isOwner(vendorId);
+
+      // Customer subcollection under a vendor
+      match /Customers/{customerId} {
+        allow read, write: if isOwner(vendorId);
+        allow read: if isAuthenticated() && request.auth.uid == customerId;
+      }
+
+      // Daily milk delivery routes
+      match /DailySupply/{supplyId} {
+        allow read, write: if isOwner(vendorId);
+        allow read: if isAuthenticated() && request.auth.uid == resource.data.customerId;
+      }
+
+      // Khata & monthly ledger invoices
+      match /Khata/{khataId} {
+        allow read, write: if isOwner(vendorId);
+        allow read: if isAuthenticated() && request.auth.uid == resource.data.customerId;
+      }
+
+      // Milk inventory & stock
+      match /Stock/{stockId} {
+        allow read, write: if isOwner(vendorId);
+      }
+
+      // Business expenses
+      match /Expenses/{expenseId} {
+        allow read, write: if isOwner(vendorId);
+      }
+    }
+
+    // Default fallback: deny unauthenticated/unmatched requests
     match /{document=**} {
       // This rule allows anyone with your database reference to view, edit,
       // and delete all data in your database. It is useful for getting

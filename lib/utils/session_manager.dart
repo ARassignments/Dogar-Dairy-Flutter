@@ -116,6 +116,17 @@ class SessionManager {
     return prefs.getString(_userIdKey);
   }
 
+  /// Save or update user object in session
+  static Future<void> saveUser(Map<String, dynamic> user) async {
+    final prefs = await SharedPreferences.getInstance();
+    final cleanData = _cleanMap(user);
+    final encodedUser = jsonEncode(
+      cleanData,
+      toEncodable: (item) => _toEncodable(item),
+    );
+    await prefs.setString(_userKey, encodedUser);
+  }
+
   /// Get user object
   static Future<Map<String, dynamic>?> getUser() async {
     final prefs = await SharedPreferences.getInstance();
