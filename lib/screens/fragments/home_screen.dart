@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '/components/dashboard_metric_cards.dart';
 import '/components/dashboard_slider.dart';
+import '/components/recommended_actions_grid.dart';
 import '/providers/user_provider.dart';
 import '/screens/help_center_screen.dart';
 import '/theme/theme.dart';
@@ -41,7 +42,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget build(BuildContext context) {
     super.build(context);
     final user = ref.watch(userProvider);
-    final role = (user?.role.isNotEmpty == true ? user!.role : _cachedRole).toLowerCase();
+    final role =
+        (user?.role.isNotEmpty == true ? user!.role : _cachedRole).toLowerCase();
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -52,12 +54,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             const DashboardSlider(),
             const SizedBox(height: 8),
             DashboardMetricCards(role: role),
-            const SizedBox(height: 8),
+            const SizedBox(height: 14),
+
+            // ✨ Recommended For You 3D Interactive Action Grid with Fade In & Hover
+            RecommendedActionsGrid(
+              onMenuSelect: widget.onMenuSelect,
+              role: role,
+            ),
+            const SizedBox(height: 14),
+
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               child: Text(
                 role == 'staff'
-                    ? "Vendor Actions"
+                    ? "Vendor Quick Links"
                     : (role == 'admin' ? "Platform Quick Links" : "Need Help?"),
                 style: AppTheme.textLabel(context).copyWith(
                   fontSize: 14,
@@ -71,16 +81,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 children: [
                   Expanded(
                     child: Opacity(
-                      opacity: 0.9,
+                      opacity: 0.95,
                       child: InkWell(
                         onTap: () {
                           if (role == 'staff') {
-                            widget.onMenuSelect(1); // Go to Customers / Orders
+                            widget.onMenuSelect(1); // Go to Supply / Deliveries
                           } else {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => const HelpCenterScreen(initialTabIndex: 0),
+                                builder: (_) =>
+                                    const HelpCenterScreen(initialTabIndex: 0),
                               ),
                             );
                           }
@@ -124,7 +135,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   const SizedBox(width: 16),
                   Expanded(
                     child: Opacity(
-                      opacity: 0.9,
+                      opacity: 0.95,
                       child: InkWell(
                         onTap: () {
                           if (role == 'staff') {
@@ -133,7 +144,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => const HelpCenterScreen(initialTabIndex: 1),
+                                builder: (_) =>
+                                    const HelpCenterScreen(initialTabIndex: 1),
                               ),
                             );
                           }
@@ -177,7 +189,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
           ],
         ),
       ),

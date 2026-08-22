@@ -256,7 +256,7 @@ class AppTheme {
         ? AppColor.neutral_90
         : AppColor.neutral_5;
   }
-  
+
   static Color customListBg2(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark
         ? AppColor.neutral_90
@@ -385,7 +385,7 @@ class AppTheme {
 
   static TextStyle textLink(BuildContext context) => TextStyle(
     fontFamily: AppFontFamily.poppinsSemiBold,
-    fontSize: 14,
+    fontSize: 12,
     color: Theme.of(context).brightness == Brightness.dark
         ? AppColor.white
         : AppColor.neutral_80,
